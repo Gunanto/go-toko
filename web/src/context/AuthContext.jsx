@@ -1,0 +1,79 @@
+import PropTypes from "prop-types";
+import { createContext, useContext, useMemo, useState } from "react";
+import { fetchMe, login as loginApi, registerUser } from "../lib/api";
+
+const AuthContext = createContext(null);
+
+const storageKey = "go_toko_token";
+
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(() => localStorage.getItem(storageKey));
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const isAuthenticated = Boolean(token);
+
+  const login = async (username, password) => {
+    setLoading(true);
+    try {
+      const response = await loginApi(username, password);
+      const accessToken = response?.data?.token;
+      if (!accessToken) {
+        throw new Error("Token tidak ditemukan");
+      }
+      localStorage.setItem(storageKey, accessToken);
+      setToken(accessToken);
+      try {
+        const profile = await fetchMe(accessToken);
+        setUser(profile?.data?.users?.[0] ?? null);
+      } catch {
+        setUser(null);
+      }
+      return response;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (name, username, email, password) => {
+    setLoading(true);
+    try {
+      return await registerUser(name, username, email, password);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem(storageKey);
+    setToken(null);
+    setUser(null);
+  };
+
+  const value = useMemo(
+    () => ({
+      token,
+      user,
+      isAuthenticated,
+      loading,
+      login,
+      register,
+      logout,
+    }),
+    [token, user, isAuthenticated, loading],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return ctx;
+}

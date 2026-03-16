@@ -1,0 +1,57 @@
+{
+    "name": "go-pos",
+    "image": "mcr.microsoft.com/devcontainers/go:1.22-bookworm",
+    "runArgs": [
+        "--name",
+        "go-pos",
+        "--network=host"
+    ],
+    "portsAttributes": {
+        "8080": {
+            "label": "Application",
+            "onAutoForward": "notify"
+        }
+    },
+    "postCreateCommand": "task",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "configureZshAsDefaultShell": true
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+        "ghcr.io/devcontainers-contrib/features/act:1": {},
+        "ghcr.io/devcontainers-contrib/features/go-task:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",
+                "waderyan.gitblame", // git blame
+                "oderwat.indent-rainbow", // colorize indentation
+                "task.vscode-task", // task runner
+                "davidanson.vscode-markdownlint", // markdown linting
+                "ms-azuretools.vscode-docker", // docker integration and linting
+                "redhat.vscode-yaml", // yaml syntax highlighting
+                "github.copilot" // AI code completion
+            ],
+            "settings": {
+                "editor.formatOnSave": true,
+                "go.testFlags": [
+                    "-v",
+                    "-race",
+                    "-cover",
+                    "-count=1"
+                ],
+                "go.testTimeout": "30s",
+                "go.lintTool": "golangci-lint",
+                "go.lintFlags": [
+                    "--fast"
+                ],
+                "[go]": {
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "explicit"
+                    }
+                }
+            }
+        }
+    }
+}
