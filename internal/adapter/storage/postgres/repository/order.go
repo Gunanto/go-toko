@@ -2,11 +2,14 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/bagashiz/go-pos/internal/adapter/storage/postgres"
 	"github.com/bagashiz/go-pos/internal/core/domain"
+	"github.com/bagashiz/go-pos/internal/core/port"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -16,6 +19,73 @@ import (
  */
 type OrderRepository struct {
 	db *postgres.DB
+}
+
+// ListCustomers aggregates customers based on orders
+func (or *OrderRepository) ListCustomers(ctx context.Context, skip, limit uint64) ([]domain.CustomerSummary, error) {
+	var customers []domain.CustomerSummary
+
+	query := or.db.QueryBuilder.
+		Select(
+			"customer_name",
+			"COUNT(*) AS total_orders",
+			"SUM(total_price) AS total_spent",
+			"MAX(created_at) AS last_order_at",
+		).
+		From("orders").
+		GroupBy("customer_name").
+		OrderBy("total_spent DESC").
+		Limit(limit).
+		Offset(skip)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := or.db.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var summary domain.CustomerSummary
+		err := rows.Scan(
+			&summary.Name,
+			&summary.TotalOrders,
+			&summary.TotalSpent,
+			&summary.LastOrderAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		customers = append(customers, summary)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return customers, nil
+}
+
+// CountCustomers returns total distinct customers
+func (or *OrderRepository) CountCustomers(ctx context.Context) (uint64, error) {
+	var total uint64
+
+	query := or.db.QueryBuilder.Select("COUNT(DISTINCT customer_name)").From("orders")
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	err = or.db.QueryRow(ctx, sql, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
 
 // NewOrderRepository creates a new order repository instance
@@ -29,11 +99,20 @@ func NewOrderRepository(db *postgres.DB) *OrderRepository {
 func (or *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) (*domain.Order, error) {
 	var product domain.Product
 	var products []domain.OrderProduct
+	var customerID sql.NullInt64
 
 	orderQuery := or.db.QueryBuilder.Insert("orders").
-		Columns("user_id", "payment_id", "customer_name", "total_price", "total_paid", "total_return").
-		Values(order.UserID, order.PaymentID, order.CustomerName, order.TotalPrice, order.TotalPaid, order.TotalReturn).
-		Suffix("RETURNING *")
+		Columns("user_id", "payment_id", "customer_id", "customer_name", "total_price", "total_paid", "total_return").
+		Values(
+			order.UserID,
+			order.PaymentID,
+			nullableUint64(order.CustomerID),
+			order.CustomerName,
+			order.TotalPrice,
+			order.TotalPaid,
+			order.TotalReturn,
+		).
+		Suffix("RETURNING id, user_id, payment_id, customer_id, customer_name, total_price, total_paid, total_return, receipt_code, created_at, updated_at")
 
 	err := pgx.BeginFunc(ctx, or.db, func(tx pgx.Tx) error {
 		sql, args, err := orderQuery.ToSql()
@@ -45,6 +124,7 @@ func (or *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order)
 			&order.ID,
 			&order.UserID,
 			&order.PaymentID,
+			&customerID,
 			&order.CustomerName,
 			&order.TotalPrice,
 			&order.TotalPaid,
@@ -56,6 +136,7 @@ func (or *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order)
 		if err != nil {
 			return err
 		}
+		order.CustomerID = nullInt64ToUint64Ptr(customerID)
 
 		for _, orderProduct := range order.Products {
 			orderProductQuery := or.db.QueryBuilder.Insert("order_products").
@@ -121,8 +202,21 @@ func (or *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order)
 func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain.Order, error) {
 	var order domain.Order
 	var orderProduct domain.OrderProduct
+	var customerID sql.NullInt64
 
-	orderQuery := or.db.QueryBuilder.Select("*").
+	orderQuery := or.db.QueryBuilder.Select(
+		"id",
+		"user_id",
+		"payment_id",
+		"customer_id",
+		"customer_name",
+		"total_price",
+		"total_paid",
+		"total_return",
+		"receipt_code",
+		"created_at",
+		"updated_at",
+	).
 		From("orders").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -142,6 +236,7 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 			&order.ID,
 			&order.UserID,
 			&order.PaymentID,
+			&customerID,
 			&order.CustomerName,
 			&order.TotalPrice,
 			&order.TotalPaid,
@@ -156,6 +251,7 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 			}
 			return err
 		}
+		order.CustomerID = nullInt64ToUint64Ptr(customerID)
 
 		sql, args, err = orderProductQuery.ToSql()
 		if err != nil {
@@ -166,6 +262,7 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 		if err != nil {
 			return err
 		}
+		defer rows.Close()
 
 		for rows.Next() {
 			err = rows.Scan(
@@ -184,6 +281,10 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 			order.Products = append(order.Products, orderProduct)
 		}
 
+		if err := rows.Err(); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -193,17 +294,75 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 	return &order, nil
 }
 
+func applyOrderFilters(query sq.SelectBuilder, filter port.OrderListFilter) sq.SelectBuilder {
+	if filter.Status != "" {
+		switch strings.ToLower(filter.Status) {
+		case "selesai", "completed", "paid":
+			query = query.Where(sq.Expr("total_paid >= total_price"))
+		case "menunggu", "pending", "unpaid":
+			query = query.Where(sq.Expr("total_paid < total_price"))
+		}
+	}
+
+	if filter.DateFrom != nil {
+		query = query.Where(sq.GtOrEq{"created_at": *filter.DateFrom})
+	}
+
+	if filter.DateTo != nil {
+		query = query.Where(sq.LtOrEq{"created_at": *filter.DateTo})
+	}
+
+	return query
+}
+
+// CountOrders counts orders from the database based on filters
+func (or *OrderRepository) CountOrders(ctx context.Context, filter port.OrderListFilter) (uint64, error) {
+	var total uint64
+
+	countQuery := or.db.QueryBuilder.Select("COUNT(*)").
+		From("orders")
+
+	countQuery = applyOrderFilters(countQuery, filter)
+
+	sql, args, err := countQuery.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	err = or.db.QueryRow(ctx, sql, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
 // ListOrders lists all orders from the database
-func (or *OrderRepository) ListOrders(ctx context.Context, skip, limit uint64) ([]domain.Order, error) {
+func (or *OrderRepository) ListOrders(ctx context.Context, filter port.OrderListFilter, skip, limit uint64) ([]domain.Order, error) {
 	var order domain.Order
 	var orderProduct domain.OrderProduct
 	var orders []domain.Order
+	var customerID sql.NullInt64
 
-	ordersQuery := or.db.QueryBuilder.Select("*").
+	ordersQuery := or.db.QueryBuilder.Select(
+		"id",
+		"user_id",
+		"payment_id",
+		"customer_id",
+		"customer_name",
+		"total_price",
+		"total_paid",
+		"total_return",
+		"receipt_code",
+		"created_at",
+		"updated_at",
+	).
 		From("orders").
 		OrderBy("id").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
+
+	ordersQuery = applyOrderFilters(ordersQuery, filter)
 
 	err := pgx.BeginFunc(ctx, or.db, func(tx pgx.Tx) error {
 		sql, args, err := ordersQuery.ToSql()
@@ -215,12 +374,14 @@ func (or *OrderRepository) ListOrders(ctx context.Context, skip, limit uint64) (
 		if err != nil {
 			return err
 		}
+		defer rows.Close()
 
 		for rows.Next() {
 			err := rows.Scan(
 				&order.ID,
 				&order.UserID,
 				&order.PaymentID,
+				&customerID,
 				&order.CustomerName,
 				&order.TotalPrice,
 				&order.TotalPaid,
@@ -232,8 +393,13 @@ func (or *OrderRepository) ListOrders(ctx context.Context, skip, limit uint64) (
 			if err != nil {
 				return err
 			}
+			order.CustomerID = nullInt64ToUint64Ptr(customerID)
 
 			orders = append(orders, order)
+		}
+
+		if err := rows.Err(); err != nil {
+			return err
 		}
 
 		for i, order := range orders {
@@ -246,26 +412,38 @@ func (or *OrderRepository) ListOrders(ctx context.Context, skip, limit uint64) (
 				return err
 			}
 
-			rows, err := tx.Query(ctx, sql, args...)
-			if err != nil {
-				return err
-			}
-
-			for rows.Next() {
-				err := rows.Scan(
-					&orderProduct.ID,
-					&orderProduct.OrderID,
-					&orderProduct.ProductID,
-					&orderProduct.Quantity,
-					&orderProduct.TotalPrice,
-					&orderProduct.CreatedAt,
-					&orderProduct.UpdatedAt,
-				)
+			err = func() error {
+				rows, err := tx.Query(ctx, sql, args...)
 				if err != nil {
 					return err
 				}
+				defer rows.Close()
 
-				orders[i].Products = append(orders[i].Products, orderProduct)
+				for rows.Next() {
+					err := rows.Scan(
+						&orderProduct.ID,
+						&orderProduct.OrderID,
+						&orderProduct.ProductID,
+						&orderProduct.Quantity,
+						&orderProduct.TotalPrice,
+						&orderProduct.CreatedAt,
+						&orderProduct.UpdatedAt,
+					)
+					if err != nil {
+						return err
+					}
+
+					orders[i].Products = append(orders[i].Products, orderProduct)
+				}
+
+				if err := rows.Err(); err != nil {
+					return err
+				}
+
+				return nil
+			}()
+			if err != nil {
+				return err
 			}
 		}
 
@@ -276,4 +454,19 @@ func (or *OrderRepository) ListOrders(ctx context.Context, skip, limit uint64) (
 	}
 
 	return orders, nil
+}
+
+func nullableUint64(value *uint64) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func nullInt64ToUint64Ptr(value sql.NullInt64) *uint64 {
+	if !value.Valid {
+		return nil
+	}
+	parsed := uint64(value.Int64)
+	return &parsed
 }

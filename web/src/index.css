@@ -5,7 +5,35 @@
 @tailwind utilities;
 
 body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    @apply bg-gray-50 text-gray-900 font-sans transition-colors duration-200;
+}
+
+.dark body {
+    @apply bg-slate-950 text-slate-100;
+}
+
+.app-surface {
+    @apply bg-white border border-gray-100 shadow-soft-xl;
+}
+
+.dark .app-surface {
+    @apply bg-slate-900 border-slate-800 shadow-none;
+}
+
+.app-card {
+    @apply rounded-2xl border border-gray-100 bg-white;
+}
+
+.dark .app-card {
+    @apply border-slate-800 bg-slate-900;
+}
+
+.app-muted {
+    @apply text-gray-500;
+}
+
+.dark .app-muted {
+    @apply text-slate-400;
 }
 
 * {

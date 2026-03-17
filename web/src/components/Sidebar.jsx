@@ -68,7 +68,7 @@ function Sidebar({ open, onClose }) {
   return (
     <>
       <aside
-        className={`fixed left-0 top-0 z-40 h-full w-64 transform border-r border-gray-200 bg-white pt-20 transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-full w-64 transform border-r border-gray-200 bg-white pt-20 transition-transform duration-200 dark:border-slate-800 dark:bg-slate-950 lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -82,14 +82,14 @@ function Sidebar({ open, onClose }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                     isActive
-                      ? "bg-cyan-50 text-cyan-700"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200"
+                      : "text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-900"
                   }`
                 }
                 onClick={onClose}
               >
                 <svg
-                  className="h-5 w-5 text-gray-500"
+                  className="h-5 w-5 text-gray-500 dark:text-slate-400"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                   aria-hidden="true"
@@ -101,7 +101,7 @@ function Sidebar({ open, onClose }) {
             ))}
           </nav>
 
-          <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 p-4 text-white shadow-soft-xl">
+          <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 p-4 text-white shadow-soft-xl dark:border-slate-800">
             <p className="text-xs uppercase tracking-wide text-cyan-200">
               Insight Harian
             </p>

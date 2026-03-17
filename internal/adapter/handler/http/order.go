@@ -1,6 +1,10 @@
 package http
 
 import (
+	"errors"
+	"strings"
+	"time"
+
 	"github.com/bagashiz/go-pos/internal/core/domain"
 	"github.com/bagashiz/go-pos/internal/core/port"
 	"github.com/gin-gonic/gin"
@@ -21,15 +25,16 @@ func NewOrderHandler(svc port.OrderService) *OrderHandler {
 // orderProductRequest represents an order product request body
 type orderProductRequest struct {
 	ProductID uint64 `json:"product_id" binding:"required,min=1" example:"1"`
-	Quantity  int64  `json:"qty" binding:"required,number" example:"1"`
+	Quantity  int64  `json:"qty" binding:"required,min=1" example:"1"`
 }
 
 // createOrderRequest represents a request body for creating a new order
 type createOrderRequest struct {
-	PaymentID    uint64                `json:"payment_id" binding:"required" example:"1"`
+	PaymentID    uint64                `json:"payment_id" binding:"required,min=1" example:"1"`
+	CustomerID   *uint64               `json:"customer_id" binding:"omitempty,min=1" example:"1"`
 	CustomerName string                `json:"customer_name" binding:"required" example:"John Doe"`
-	TotalPaid    int64                 `json:"total_paid" binding:"required" example:"100000"`
-	Products     []orderProductRequest `json:"products" binding:"required"`
+	TotalPaid    int64                 `json:"total_paid" binding:"required,min=0" example:"100000"`
+	Products     []orderProductRequest `json:"products" binding:"required,min=1,dive"`
 }
 
 // CreateOrder godoc
@@ -68,6 +73,7 @@ func (oh *OrderHandler) CreateOrder(ctx *gin.Context) {
 	order := domain.Order{
 		UserID:       authPayload.UserID,
 		PaymentID:    req.PaymentID,
+		CustomerID:   req.CustomerID,
 		CustomerName: req.CustomerName,
 		TotalPaid:    float64(req.TotalPaid),
 		Products:     products,
@@ -123,8 +129,11 @@ func (oh *OrderHandler) GetOrder(ctx *gin.Context) {
 
 // listOrdersRequest represents a request body for listing orders
 type listOrdersRequest struct {
-	Skip  uint64 `form:"skip" binding:"required,min=0" example:"0"`
-	Limit uint64 `form:"limit" binding:"required,min=5" example:"5"`
+	Skip     uint64 `form:"skip" binding:"omitempty,min=0" example:"0"`
+	Limit    uint64 `form:"limit" binding:"omitempty,min=5" example:"5"`
+	Status   string `form:"status" binding:"omitempty" example:"selesai"`
+	DateFrom string `form:"date_from" binding:"omitempty" example:"2026-03-01"`
+	DateTo   string `form:"date_to" binding:"omitempty" example:"2026-03-31"`
 }
 
 // ListOrders godoc
@@ -136,6 +145,9 @@ type listOrdersRequest struct {
 //	@Produce		json
 //	@Param			skip	query		uint64			true	"Skip records"
 //	@Param			limit	query		uint64			true	"Limit records"
+//	@Param			status	query		string			false	"Status (selesai|menunggu)"
+//	@Param			date_from	query		string			false	"Start date (YYYY-MM-DD)"
+//	@Param			date_to	query		string			false	"End date (YYYY-MM-DD)"
 //	@Success		200		{object}	meta			"Orders displayed"
 //	@Failure		400		{object}	errorResponse	"Validation error"
 //	@Failure		401		{object}	errorResponse	"Unauthorized error"
@@ -150,8 +162,41 @@ func (oh *OrderHandler) ListOrders(ctx *gin.Context) {
 		validationError(ctx, err)
 		return
 	}
+	if req.Limit == 0 {
+		req.Limit = 20
+	}
 
-	orders, err := oh.svc.ListOrders(ctx, req.Skip, req.Limit)
+	filter := port.OrderListFilter{
+		Status: req.Status,
+	}
+
+	if req.DateFrom != "" {
+		parsed, _, err := parseOrderDateInput(req.DateFrom)
+		if err != nil {
+			validationError(ctx, err)
+			return
+		}
+		filter.DateFrom = &parsed
+	}
+
+	if req.DateTo != "" {
+		parsed, dateOnly, err := parseOrderDateInput(req.DateTo)
+		if err != nil {
+			validationError(ctx, err)
+			return
+		}
+		if dateOnly {
+			parsed = parsed.Add(23*time.Hour + 59*time.Minute + 59*time.Second + 999*time.Millisecond)
+		}
+		filter.DateTo = &parsed
+	}
+
+	if filter.DateFrom != nil && filter.DateTo != nil && filter.DateFrom.After(*filter.DateTo) {
+		validationError(ctx, errors.New("date_from must be before or equal to date_to"))
+		return
+	}
+
+	orders, total, err := oh.svc.ListOrders(ctx, filter, req.Skip, req.Limit)
 	if err != nil {
 		handleError(ctx, err)
 		return
@@ -161,9 +206,27 @@ func (oh *OrderHandler) ListOrders(ctx *gin.Context) {
 		ordersList = append(ordersList, newOrderResponse(&order))
 	}
 
-	total := uint64(len(ordersList))
 	meta := newMeta(total, req.Limit, req.Skip)
 	rsp := toMap(meta, ordersList, "orders")
 
 	handleSuccess(ctx, rsp)
+}
+
+func parseOrderDateInput(value string) (time.Time, bool, error) {
+	normalized := strings.TrimSpace(value)
+	if strings.Contains(normalized, "T") && strings.Contains(normalized, " ") {
+		normalized = strings.ReplaceAll(normalized, " ", "+")
+	}
+
+	parsed, err := time.Parse(time.RFC3339, normalized)
+	if err == nil {
+		return parsed, false, nil
+	}
+
+	parsed, err = time.ParseInLocation("2006-01-02", normalized, time.Local)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+
+	return parsed, true, nil
 }

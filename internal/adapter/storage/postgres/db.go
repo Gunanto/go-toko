@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
@@ -83,7 +84,10 @@ func (db *DB) Migrate() error {
 
 // ErrorCode returns the error code of the given error
 func (db *DB) ErrorCode(err error) string {
-	pgErr := err.(*pgconn.PgError)
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) {
+		return ""
+	}
 	return pgErr.Code
 }
 

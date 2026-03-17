@@ -202,41 +202,52 @@ func (os *OrderService) GetOrder(ctx context.Context, id uint64) (*domain.Order,
 }
 
 // ListOrders lists all orders
-func (os *OrderService) ListOrders(ctx context.Context, skip, limit uint64) ([]domain.Order, error) {
+func (os *OrderService) ListOrders(
+	ctx context.Context,
+	filter port.OrderListFilter,
+	skip,
+	limit uint64,
+) ([]domain.Order, uint64, error) {
 	var orders []domain.Order
 
-	params := util.GenerateCacheKeyParams(skip, limit)
+	params := util.GenerateCacheKeyParams(skip, limit, filter.Status, filter.DateFrom, filter.DateTo)
 	cacheKey := util.GenerateCacheKey("orders", params)
 
 	cachedOrders, err := os.cache.Get(ctx, cacheKey)
 	if err == nil {
 		err := util.Deserialize(cachedOrders, &orders)
 		if err != nil {
-			return nil, domain.ErrInternal
+			return nil, 0, domain.ErrInternal
 		}
-		return orders, nil
 	}
 
-	orders, err = os.orderRepo.ListOrders(ctx, skip, limit)
+	total, err := os.orderRepo.CountOrders(ctx, filter)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, 0, domain.ErrInternal
+	}
+
+	if len(orders) == 0 {
+		orders, err = os.orderRepo.ListOrders(ctx, filter, skip, limit)
+		if err != nil {
+			return nil, 0, domain.ErrInternal
+		}
 	}
 
 	for i, order := range orders {
 		user, err := os.userRepo.GetUserByID(ctx, order.UserID)
 		if err != nil {
 			if err == domain.ErrDataNotFound {
-				return nil, err
+				return nil, 0, err
 			}
-			return nil, domain.ErrInternal
+			return nil, 0, domain.ErrInternal
 		}
 
 		payment, err := os.paymentRepo.GetPaymentByID(ctx, order.PaymentID)
 		if err != nil {
 			if err == domain.ErrDataNotFound {
-				return nil, err
+				return nil, 0, err
 			}
-			return nil, domain.ErrInternal
+			return nil, 0, domain.ErrInternal
 		}
 
 		orders[i].User = user
@@ -248,17 +259,17 @@ func (os *OrderService) ListOrders(ctx context.Context, skip, limit uint64) ([]d
 			product, err := os.productRepo.GetProductByID(ctx, orderProduct.ProductID)
 			if err != nil {
 				if err == domain.ErrDataNotFound {
-					return nil, err
+					return nil, 0, err
 				}
-				return nil, domain.ErrInternal
+				return nil, 0, domain.ErrInternal
 			}
 
 			category, err := os.categoryRepo.GetCategoryByID(ctx, product.CategoryID)
 			if err != nil {
 				if err == domain.ErrDataNotFound {
-					return nil, err
+					return nil, 0, err
 				}
-				return nil, domain.ErrInternal
+				return nil, 0, domain.ErrInternal
 			}
 
 			orders[i].Products[j].Product = product
@@ -268,13 +279,13 @@ func (os *OrderService) ListOrders(ctx context.Context, skip, limit uint64) ([]d
 
 	ordersSerialized, err := util.Serialize(orders)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, 0, domain.ErrInternal
 	}
 
 	err = os.cache.Set(ctx, cacheKey, ordersSerialized, 0)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, 0, domain.ErrInternal
 	}
 
-	return orders, nil
+	return orders, total, nil
 }

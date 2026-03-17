@@ -101,8 +101,8 @@ func (ch *CategoryHandler) GetCategory(ctx *gin.Context) {
 
 // listCategoriesRequest represents a request body for listing categories
 type listCategoriesRequest struct {
-	Skip  uint64 `form:"skip" binding:"required,min=0" example:"0"`
-	Limit uint64 `form:"limit" binding:"required,min=5" example:"5"`
+	Skip  uint64 `form:"skip" binding:"omitempty,min=0" example:"0"`
+	Limit uint64 `form:"limit" binding:"omitempty,min=1" example:"10"`
 }
 
 // ListCategories godoc
@@ -126,6 +126,9 @@ func (ch *CategoryHandler) ListCategories(ctx *gin.Context) {
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		validationError(ctx, err)
 		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 100
 	}
 
 	categories, err := ch.svc.ListCategories(ctx, req.Skip, req.Limit)

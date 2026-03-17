@@ -55,21 +55,21 @@ func (uh *UserHandler) Register(ctx *gin.Context) {
 		Password: req.Password,
 	}
 
-	_, err := uh.svc.Register(ctx, &user)
+	registeredUser, err := uh.svc.Register(ctx, &user)
 	if err != nil {
 		handleError(ctx, err)
 		return
 	}
 
-	rsp := newUserResponse(&user)
+	rsp := newUserResponse(registeredUser)
 
 	handleSuccess(ctx, rsp)
 }
 
 // listUsersRequest represents the request body for listing users
 type listUsersRequest struct {
-	Skip  uint64 `form:"skip" binding:"required,min=0" example:"0"`
-	Limit uint64 `form:"limit" binding:"required,min=5" example:"5"`
+	Skip  uint64 `form:"skip" binding:"omitempty,min=0" example:"0"`
+	Limit uint64 `form:"limit" binding:"omitempty,min=5" example:"5"`
 }
 
 // ListUsers godoc
@@ -93,6 +93,9 @@ func (uh *UserHandler) ListUsers(ctx *gin.Context) {
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		validationError(ctx, err)
 		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 20
 	}
 
 	users, err := uh.svc.ListUsers(ctx, req.Skip, req.Limit)
@@ -139,6 +142,32 @@ func (uh *UserHandler) GetUser(ctx *gin.Context) {
 	}
 
 	user, err := uh.svc.GetUser(ctx, req.ID)
+	if err != nil {
+		handleError(ctx, err)
+		return
+	}
+
+	rsp := newUserResponse(user)
+
+	handleSuccess(ctx, rsp)
+}
+
+// GetMe godoc
+//
+//	@Summary		Get current user
+//	@Description	Get the authenticated user's profile
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	userResponse	"User profile"
+//	@Failure		401	{object}	errorResponse	"Unauthorized error"
+//	@Failure		404	{object}	errorResponse	"Data not found error"
+//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Router			/users/me [get]
+//	@Security		BearerAuth
+func (uh *UserHandler) GetMe(ctx *gin.Context) {
+	authPayload := getAuthPayload(ctx, authorizationPayloadKey)
+	user, err := uh.svc.GetUser(ctx, authPayload.UserID)
 	if err != nil {
 		handleError(ctx, err)
 		return

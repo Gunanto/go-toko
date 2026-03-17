@@ -23,6 +23,12 @@ This project idea was inspired by the [Ide Project untuk Upgrade Portfolio Backe
     ```
 
     Update configuration values as needed.
+    For token stability across restarts or multiple instances, set `TOKEN_KEY_HEX`
+    to a 32-byte hex string (64 hex chars). Example:
+
+    ```bash
+    openssl rand -hex 32
+    ```
 
 3. Install all dependencies, run docker compose, create database schema, and run database migrations:
 
@@ -55,3 +61,10 @@ Go POS project is licensed under the [MIT License](LICENSE), providing an open a
 - [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) by Alistair Cockburn
 - [Ready for changes with Hexagonal Architecture](https://netflixtechblog.com/ready-for-changes-with-hexagonal-architecture-b315ec967749) by Netflix Technology Blog
 - [Hexagonal Architecture in Go](https://medium.com/@matiasvarela/hexagonal-architecture-in-go-cfd4e436faa3) by Matias Varela
+
+Langkah lanjut
+1. Restart `app-dev` (air akan rebuild otomatis).
+2. Coba daftar lagi dari UI.
+
+Pertanyaan singkat
+Untuk “CRUD lengkap”, apakah kamu ingin saya menambahkan `Update/Delete` untuk order (mis. cancel order + rollback stock), atau order tetap immutable?

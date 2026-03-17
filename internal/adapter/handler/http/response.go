@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -56,12 +57,13 @@ func newAuthResponse(token string) authResponse {
 
 // userResponse represents a user response body
 type userResponse struct {
-	ID        uint64    `json:"id" example:"1"`
-	Name      string    `json:"name" example:"John Doe"`
-	Username  string    `json:"username" example:"john_doe"`
-	Email     string    `json:"email" example:"test@example.com"`
-	CreatedAt time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
-	UpdatedAt time.Time `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+	ID        uint64          `json:"id" example:"1"`
+	Name      string          `json:"name" example:"John Doe"`
+	Username  string          `json:"username" example:"john_doe"`
+	Email     string          `json:"email" example:"test@example.com"`
+	Role      domain.UserRole `json:"role" example:"admin"`
+	CreatedAt time.Time       `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt time.Time       `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 }
 
 // newUserResponse is a helper function to create a response body for handling user data
@@ -71,6 +73,7 @@ func newUserResponse(user *domain.User) userResponse {
 		Name:      user.Name,
 		Username:  user.Username,
 		Email:     user.Email,
+		Role:      user.Role,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}
@@ -140,7 +143,9 @@ func newProductResponse(product *domain.Product) productResponse {
 type orderResponse struct {
 	ID           uint64                 `json:"id" example:"1"`
 	UserID       uint64                 `json:"user_id" example:"1"`
+	User         *userResponse          `json:"user,omitempty"`
 	PaymentID    uint64                 `json:"payment_type_id" example:"1"`
+	CustomerID   *uint64                `json:"customer_id,omitempty" example:"1"`
 	CustomerName string                 `json:"customer_name" example:"John Doe"`
 	TotalPrice   float64                `json:"total_price" example:"100000"`
 	TotalPaid    float64                `json:"total_paid" example:"100000"`
@@ -154,10 +159,17 @@ type orderResponse struct {
 
 // newOrderResponse is a helper function to create a response body for handling order data
 func newOrderResponse(order *domain.Order) orderResponse {
+	var user *userResponse
+	if order.User != nil {
+		parsed := newUserResponse(order.User)
+		user = &parsed
+	}
 	return orderResponse{
 		ID:           order.ID,
 		UserID:       order.UserID,
+		User:         user,
 		PaymentID:    order.PaymentID,
+		CustomerID:   order.CustomerID,
 		CustomerName: order.CustomerName,
 		TotalPrice:   order.TotalPrice,
 		TotalPaid:    order.TotalPaid,
@@ -237,6 +249,8 @@ func handleError(ctx *gin.Context, err error) {
 	if !ok {
 		statusCode = http.StatusInternalServerError
 	}
+
+	slog.Error("error handled", "error", err, "status_code", statusCode)
 
 	errMsg := parseError(err)
 	errRsp := newErrorResponse(errMsg)

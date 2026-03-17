@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/bagashiz/go-pos/internal/core/domain"
+	port "github.com/bagashiz/go-pos/internal/core/port"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -71,18 +72,33 @@ func (mr *MockOrderRepositoryMockRecorder) GetOrderByID(ctx, id any) *gomock.Cal
 }
 
 // ListOrders mocks base method.
-func (m *MockOrderRepository) ListOrders(ctx context.Context, skip, limit uint64) ([]domain.Order, error) {
+func (m *MockOrderRepository) ListOrders(ctx context.Context, filter port.OrderListFilter, skip, limit uint64) ([]domain.Order, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListOrders", ctx, skip, limit)
+	ret := m.ctrl.Call(m, "ListOrders", ctx, filter, skip, limit)
 	ret0, _ := ret[0].([]domain.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListOrders indicates an expected call of ListOrders.
-func (mr *MockOrderRepositoryMockRecorder) ListOrders(ctx, skip, limit any) *gomock.Call {
+func (mr *MockOrderRepositoryMockRecorder) ListOrders(ctx, filter, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOrders", reflect.TypeOf((*MockOrderRepository)(nil).ListOrders), ctx, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOrders", reflect.TypeOf((*MockOrderRepository)(nil).ListOrders), ctx, filter, skip, limit)
+}
+
+// CountOrders mocks base method.
+func (m *MockOrderRepository) CountOrders(ctx context.Context, filter port.OrderListFilter) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountOrders", ctx, filter)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountOrders indicates an expected call of CountOrders.
+func (mr *MockOrderRepositoryMockRecorder) CountOrders(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountOrders", reflect.TypeOf((*MockOrderRepository)(nil).CountOrders), ctx, filter)
 }
 
 // MockOrderService is a mock of OrderService interface.
@@ -139,16 +155,17 @@ func (mr *MockOrderServiceMockRecorder) GetOrder(ctx, id any) *gomock.Call {
 }
 
 // ListOrders mocks base method.
-func (m *MockOrderService) ListOrders(ctx context.Context, skip, limit uint64) ([]domain.Order, error) {
+func (m *MockOrderService) ListOrders(ctx context.Context, filter port.OrderListFilter, skip, limit uint64) ([]domain.Order, uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListOrders", ctx, skip, limit)
+	ret := m.ctrl.Call(m, "ListOrders", ctx, filter, skip, limit)
 	ret0, _ := ret[0].([]domain.Order)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ListOrders indicates an expected call of ListOrders.
-func (mr *MockOrderServiceMockRecorder) ListOrders(ctx, skip, limit any) *gomock.Call {
+func (mr *MockOrderServiceMockRecorder) ListOrders(ctx, filter, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOrders", reflect.TypeOf((*MockOrderService)(nil).ListOrders), ctx, skip, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOrders", reflect.TypeOf((*MockOrderService)(nil).ListOrders), ctx, filter, skip, limit)
 }

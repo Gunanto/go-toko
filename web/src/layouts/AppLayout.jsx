@@ -7,14 +7,12 @@ function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 transition-colors duration-200 dark:bg-slate-950">
       <Topbar onMenuClick={() => setSidebarOpen(true)} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="pt-24 lg:ml-64">
-        <div className="mx-auto max-w-7xl px-4 pb-10 lg:px-8">
-          {children}
-        </div>
+        <div className="mx-auto max-w-7xl px-4 pb-10 lg:px-8">{children}</div>
       </main>
     </div>
   );

@@ -1,6 +1,7 @@
 package paseto
 
 import (
+	"strings"
 	"time"
 
 	"aidanwoods.dev/go-paseto"
@@ -15,7 +16,6 @@ import (
  * and provides an access to the paseto library
  */
 type PasetoToken struct {
-	token    *paseto.Token
 	key      *paseto.V4SymmetricKey
 	parser   *paseto.Parser
 	duration time.Duration
@@ -29,12 +29,16 @@ func New(config *config.Token) (port.TokenService, error) {
 		return nil, domain.ErrTokenDuration
 	}
 
-	token := paseto.NewToken()
-	key := paseto.NewV4SymmetricKey()
+	if strings.TrimSpace(config.Key) == "" {
+		return nil, domain.ErrTokenKey
+	}
+	key, err := paseto.V4SymmetricKeyFromHex(config.Key)
+	if err != nil {
+		return nil, domain.ErrTokenKey
+	}
 	parser := paseto.NewParser()
 
 	return &PasetoToken{
-		&token,
 		&key,
 		&parser,
 		duration,
@@ -54,7 +58,8 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 		Role:   user.Role,
 	}
 
-	err = pt.token.Set("payload", payload)
+	token := paseto.NewToken()
+	err = token.Set("payload", payload)
 	if err != nil {
 		return "", domain.ErrTokenCreation
 	}
@@ -62,13 +67,13 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 	issuedAt := time.Now()
 	expiredAt := issuedAt.Add(pt.duration)
 
-	pt.token.SetIssuedAt(issuedAt)
-	pt.token.SetNotBefore(issuedAt)
-	pt.token.SetExpiration(expiredAt)
+	token.SetIssuedAt(issuedAt)
+	token.SetNotBefore(issuedAt)
+	token.SetExpiration(expiredAt)
 
-	token := pt.token.V4Encrypt(*pt.key, nil)
+	tokenStr := token.V4Encrypt(*pt.key, nil)
 
-	return token, nil
+	return tokenStr, nil
 }
 
 // VerifyToken verifies the paseto token

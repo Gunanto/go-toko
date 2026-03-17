@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	dbsql "database/sql"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -27,6 +28,7 @@ func NewPaymentRepository(db *postgres.DB) *PaymentRepository {
 
 // CreatePayment creates a new payment record in the database
 func (pr *PaymentRepository) CreatePayment(ctx context.Context, payment *domain.Payment) (*domain.Payment, error) {
+	var logo dbsql.NullString
 	query := pr.db.QueryBuilder.Insert("payments").
 		Columns("name", "type", "logo").
 		Values(payment.Name, payment.Type, payment.Logo).
@@ -41,7 +43,7 @@ func (pr *PaymentRepository) CreatePayment(ctx context.Context, payment *domain.
 		&payment.ID,
 		&payment.Name,
 		&payment.Type,
-		&payment.Logo,
+		&logo,
 		&payment.CreatedAt,
 		&payment.UpdatedAt,
 	)
@@ -51,6 +53,11 @@ func (pr *PaymentRepository) CreatePayment(ctx context.Context, payment *domain.
 		}
 		return nil, err
 	}
+	if logo.Valid {
+		payment.Logo = logo.String
+	} else {
+		payment.Logo = ""
+	}
 
 	return payment, nil
 }
@@ -58,6 +65,7 @@ func (pr *PaymentRepository) CreatePayment(ctx context.Context, payment *domain.
 // GetPaymentByID retrieves a payment record from the database by id
 func (pr *PaymentRepository) GetPaymentByID(ctx context.Context, id uint64) (*domain.Payment, error) {
 	var payment domain.Payment
+	var logo dbsql.NullString
 
 	query := pr.db.QueryBuilder.Select("*").
 		From("payments").
@@ -73,7 +81,7 @@ func (pr *PaymentRepository) GetPaymentByID(ctx context.Context, id uint64) (*do
 		&payment.ID,
 		&payment.Name,
 		&payment.Type,
-		&payment.Logo,
+		&logo,
 		&payment.CreatedAt,
 		&payment.UpdatedAt,
 	)
@@ -82,6 +90,11 @@ func (pr *PaymentRepository) GetPaymentByID(ctx context.Context, id uint64) (*do
 			return nil, domain.ErrDataNotFound
 		}
 		return nil, err
+	}
+	if logo.Valid {
+		payment.Logo = logo.String
+	} else {
+		payment.Logo = ""
 	}
 
 	return &payment, nil
@@ -96,7 +109,7 @@ func (pr *PaymentRepository) ListPayments(ctx context.Context, skip, limit uint6
 		From("payments").
 		OrderBy("id").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
@@ -107,21 +120,32 @@ func (pr *PaymentRepository) ListPayments(ctx context.Context, skip, limit uint6
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
+		var logo dbsql.NullString
 		err := rows.Scan(
 			&payment.ID,
 			&payment.Name,
 			&payment.Type,
-			&payment.Logo,
+			&logo,
 			&payment.CreatedAt,
 			&payment.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
+		if logo.Valid {
+			payment.Logo = logo.String
+		} else {
+			payment.Logo = ""
+		}
 
 		payments = append(payments, payment)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return payments, nil
@@ -132,6 +156,7 @@ func (pr *PaymentRepository) UpdatePayment(ctx context.Context, payment *domain.
 	name := nullString(payment.Name)
 	paymentType := nullString(string(payment.Type))
 	logo := nullString(payment.Logo)
+	var logoOut dbsql.NullString
 
 	query := pr.db.QueryBuilder.Update("payments").
 		Set("name", sq.Expr("COALESCE(?, name)", name)).
@@ -150,7 +175,7 @@ func (pr *PaymentRepository) UpdatePayment(ctx context.Context, payment *domain.
 		&payment.ID,
 		&payment.Name,
 		&payment.Type,
-		&payment.Logo,
+		&logoOut,
 		&payment.CreatedAt,
 		&payment.UpdatedAt,
 	)
@@ -159,6 +184,11 @@ func (pr *PaymentRepository) UpdatePayment(ctx context.Context, payment *domain.
 			return nil, domain.ErrConflictingData
 		}
 		return nil, err
+	}
+	if logoOut.Valid {
+		payment.Logo = logoOut.String
+	} else {
+		payment.Logo = ""
 	}
 
 	return payment, nil

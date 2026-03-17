@@ -102,7 +102,7 @@ func (pr *ProductRepository) ListProducts(ctx context.Context, search string, ca
 		From("products").
 		OrderBy("id").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
 
 	if categoryId != 0 {
 		query = query.Where(sq.Eq{"category_id": categoryId})
@@ -121,6 +121,7 @@ func (pr *ProductRepository) ListProducts(ctx context.Context, search string, ca
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -139,6 +140,10 @@ func (pr *ProductRepository) ListProducts(ctx context.Context, search string, ca
 		}
 
 		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return products, nil

@@ -168,7 +168,7 @@ func (ur *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]
 		From("users").
 		OrderBy("id").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
@@ -197,6 +197,10 @@ func (ur *UserRepository) ListUsers(ctx context.Context, skip, limit uint64) ([]
 		}
 
 		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return users, nil

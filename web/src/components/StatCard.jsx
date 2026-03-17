@@ -3,11 +3,15 @@ import PropTypes from "prop-types";
 function StatCard({ label, value, change, trend }) {
   const isUp = trend === "up";
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-soft-xl">
+    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-soft-xl dark:border-slate-800 dark:bg-slate-950">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-          <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            {label}
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
+            {value}
+          </p>
         </div>
         <div
           className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
@@ -37,7 +41,7 @@ function StatCard({ label, value, change, trend }) {
           {change}
         </div>
       </div>
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-gray-500 dark:text-slate-400">
         dibanding minggu sebelumnya
       </p>
     </div>

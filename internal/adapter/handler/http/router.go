@@ -30,6 +30,7 @@ func NewRouter(
 	categoryHandler CategoryHandler,
 	productHandler ProductHandler,
 	orderHandler OrderHandler,
+	customerHandler CustomerHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if config.Env == "production" {
@@ -38,9 +39,37 @@ func NewRouter(
 
 	// CORS
 	ginConfig := cors.DefaultConfig()
-	allowedOrigins := config.AllowedOrigins
-	originsList := strings.Split(allowedOrigins, ",")
-	ginConfig.AllowOrigins = originsList
+	allowedOrigins := strings.TrimSpace(config.AllowedOrigins)
+	if allowedOrigins == "" {
+		// Development-friendly default when HTTP_ALLOWED_ORIGINS is not set.
+		ginConfig.AllowAllOrigins = true
+	} else {
+		originsList := strings.Split(allowedOrigins, ",")
+		cleanOrigins := make([]string, 0, len(originsList))
+		for _, origin := range originsList {
+			origin = strings.TrimSpace(origin)
+			if origin != "" {
+				cleanOrigins = append(cleanOrigins, origin)
+			}
+		}
+		ginConfig.AllowOrigins = cleanOrigins
+	}
+	ginConfig.AllowHeaders = []string{
+		"Origin",
+		"Content-Type",
+		"Accept",
+		"Authorization",
+		"authorization",
+		"X-Requested-With",
+	}
+	ginConfig.AllowMethods = []string{
+		"GET",
+		"POST",
+		"PUT",
+		"PATCH",
+		"DELETE",
+		"OPTIONS",
+	}
 
 	router := gin.New()
 	router.Use(sloggin.New(slog.Default()), gin.Recovery(), cors.New(ginConfig))
@@ -65,62 +94,87 @@ func NewRouter(
 	{
 		user := v1.Group("/users")
 		{
-			user.POST("/", userHandler.Register)
+			user.POST("", userHandler.Register)
 			user.POST("/login", authHandler.Login)
 
-			authUser := user.Group("/").Use(authMiddleware(token))
+			authUser := user.Group("/")
+			authUser.Use(authMiddleware(token))
 			{
-				authUser.GET("/", userHandler.ListUsers)
-				authUser.GET("/:id", userHandler.GetUser)
+				authUser.GET("/me", userHandler.GetMe)
 
-				admin := authUser.Use(adminMiddleware())
+				admin := authUser.Group("/")
+				admin.Use(adminMiddleware())
 				{
+					admin.GET("", userHandler.ListUsers)
+					admin.GET("/:id", userHandler.GetUser)
 					admin.PUT("/:id", userHandler.UpdateUser)
 					admin.DELETE("/:id", userHandler.DeleteUser)
 				}
 			}
 		}
-		payment := v1.Group("/payments").Use(authMiddleware(token))
+		payment := v1.Group("/payments")
+		payment.Use(authMiddleware(token))
 		{
-			payment.GET("/", paymentHandler.ListPayments)
+			payment.GET("", paymentHandler.ListPayments)
 			payment.GET("/:id", paymentHandler.GetPayment)
 
-			admin := payment.Use(adminMiddleware())
+			admin := payment.Group("/")
+			admin.Use(adminMiddleware())
 			{
-				admin.POST("/", paymentHandler.CreatePayment)
+				admin.POST("", paymentHandler.CreatePayment)
 				admin.PUT("/:id", paymentHandler.UpdatePayment)
 				admin.DELETE("/:id", paymentHandler.DeletePayment)
 			}
 		}
-		category := v1.Group("/categories").Use(authMiddleware(token))
+		category := v1.Group("/categories")
+		category.Use(authMiddleware(token))
 		{
-			category.GET("/", categoryHandler.ListCategories)
+			category.GET("", categoryHandler.ListCategories)
 			category.GET("/:id", categoryHandler.GetCategory)
 
-			admin := category.Use(adminMiddleware())
+			admin := category.Group("/")
+			admin.Use(adminMiddleware())
 			{
-				admin.POST("/", categoryHandler.CreateCategory)
+				admin.POST("", categoryHandler.CreateCategory)
 				admin.PUT("/:id", categoryHandler.UpdateCategory)
 				admin.DELETE("/:id", categoryHandler.DeleteCategory)
 			}
 		}
-		product := v1.Group("/products").Use(authMiddleware(token))
+		product := v1.Group("/products")
+		product.Use(authMiddleware(token))
 		{
-			product.GET("/", productHandler.ListProducts)
+			product.GET("", productHandler.ListProducts)
 			product.GET("/:id", productHandler.GetProduct)
 
-			admin := product.Use(adminMiddleware())
+			admin := product.Group("/")
+			admin.Use(adminMiddleware())
 			{
-				admin.POST("/", productHandler.CreateProduct)
+				admin.POST("", productHandler.CreateProduct)
+				admin.POST("/bulk", productHandler.BulkCreateProducts)
 				admin.PUT("/:id", productHandler.UpdateProduct)
 				admin.DELETE("/:id", productHandler.DeleteProduct)
 			}
 		}
-		order := v1.Group("/orders").Use(authMiddleware(token))
+		order := v1.Group("/orders")
+		order.Use(authMiddleware(token))
 		{
-			order.POST("/", orderHandler.CreateOrder)
-			order.GET("/", orderHandler.ListOrders)
+			order.POST("", orderHandler.CreateOrder)
+			order.GET("", orderHandler.ListOrders)
 			order.GET("/:id", orderHandler.GetOrder)
+		}
+		customer := v1.Group("/customers")
+		customer.Use(authMiddleware(token))
+		{
+			customer.GET("", customerHandler.ListCustomers)
+			customer.GET("/:id", customerHandler.GetCustomer)
+
+			admin := customer.Group("/")
+			admin.Use(adminMiddleware())
+			{
+				admin.POST("", customerHandler.CreateCustomer)
+				admin.PUT("/:id", customerHandler.UpdateCustomer)
+				admin.DELETE("/:id", customerHandler.DeleteCustomer)
+			}
 		}
 	}
 

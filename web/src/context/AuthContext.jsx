@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { fetchMe, login as loginApi, registerUser } from "../lib/api";
 
 const AuthContext = createContext(null);
@@ -23,12 +23,6 @@ export function AuthProvider({ children }) {
       }
       localStorage.setItem(storageKey, accessToken);
       setToken(accessToken);
-      try {
-        const profile = await fetchMe(accessToken);
-        setUser(profile?.data?.users?.[0] ?? null);
-      } catch {
-        setUser(null);
-      }
       return response;
     } finally {
       setLoading(false);
@@ -49,6 +43,36 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!token) {
+      setUser(null);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    fetchMe(token)
+      .then((profile) => {
+        if (!isMounted) return;
+        setUser(profile?.data ?? null);
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        if (error?.status === 401 || error?.status === 403) {
+          localStorage.removeItem(storageKey);
+          setToken(null);
+          setUser(null);
+        } else {
+          setUser(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
 
   const value = useMemo(
     () => ({

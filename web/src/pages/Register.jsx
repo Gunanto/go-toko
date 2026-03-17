@@ -33,27 +33,33 @@ function Register() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-900 px-4 py-12">
-      <div className="mx-auto max-w-md rounded-3xl bg-white/95 p-8 shadow-soft-xl">
+      <div className="mx-auto max-w-md rounded-3xl bg-white/95 p-8 shadow-soft-xl dark:bg-slate-950 dark:text-slate-100">
         <div>
-          <p className="text-lg font-semibold text-gray-900">Daftar Akun</p>
-          <p className="text-sm text-gray-500">Buat akun kasir baru.</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">
+            Daftar Akun
+          </p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">
+            Buat akun kasir baru.
+          </p>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="text-xs font-semibold text-gray-600">Nama</label>
+            <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+              Nama
+            </label>
             <input
               name="name"
               type="text"
               value={form.name}
               onChange={handleChange}
               required
-              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200"
+              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               placeholder="Nama lengkap"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-600">
+            <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
               Username
             </label>
             <input
@@ -62,24 +68,26 @@ function Register() {
               value={form.username}
               onChange={handleChange}
               required
-              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200"
+              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               placeholder="cashier01"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-600">Email</label>
+            <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+              Email
+            </label>
             <input
               name="email"
               type="email"
               value={form.email}
               onChange={handleChange}
               required
-              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200"
+              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               placeholder="you@email.com"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-600">
+            <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
               Password
             </label>
             <input
@@ -89,7 +97,7 @@ function Register() {
               onChange={handleChange}
               required
               minLength={8}
-              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200"
+              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               placeholder="Minimal 8 karakter"
             />
           </div>
@@ -114,7 +122,7 @@ function Register() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-500">
+        <p className="mt-6 text-center text-xs text-gray-500 dark:text-slate-400">
           Sudah punya akun?{" "}
           <Link to="/login" className="font-semibold text-cyan-600">
             Masuk

@@ -27,6 +27,11 @@ type createProductRequest struct {
 	Stock      int64   `json:"stock" binding:"required,min=0" example:"100"`
 }
 
+// bulkCreateProductsRequest represents a request body for creating products in bulk
+type bulkCreateProductsRequest struct {
+	Products []createProductRequest `json:"products" binding:"required,min=1,dive"`
+}
+
 // CreateProduct godoc
 //
 //	@Summary		Create a new product
@@ -66,6 +71,58 @@ func (ph *ProductHandler) CreateProduct(ctx *gin.Context) {
 	}
 
 	rsp := newProductResponse(&product)
+
+	handleSuccess(ctx, rsp)
+}
+
+// BulkCreateProducts godoc
+//
+//	@Summary		Bulk create products
+//	@Description	create multiple products in a single request
+//	@Tags			Products
+//	@Accept			json
+//	@Produce		json
+//	@Param			bulkCreateProductsRequest	body		bulkCreateProductsRequest	true	"Bulk create products request"
+//	@Success		200							{object}	meta							"Products created"
+//	@Failure		400							{object}	errorResponse					"Validation error"
+//	@Failure		401							{object}	errorResponse					"Unauthorized error"
+//	@Failure		403							{object}	errorResponse					"Forbidden error"
+//	@Failure		500							{object}	errorResponse					"Internal server error"
+//	@Router			/products/bulk [post]
+//	@Security		BearerAuth
+func (ph *ProductHandler) BulkCreateProducts(ctx *gin.Context) {
+	var req bulkCreateProductsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		validationError(ctx, err)
+		return
+	}
+
+	var created []productResponse
+	var failed int
+
+	for _, item := range req.Products {
+		product := domain.Product{
+			CategoryID: item.CategoryID,
+			Name:       item.Name,
+			Image:      item.Image,
+			Price:      item.Price,
+			Stock:      item.Stock,
+		}
+
+		_, err := ph.svc.CreateProduct(ctx, &product)
+		if err != nil {
+			failed++
+			continue
+		}
+
+		created = append(created, newProductResponse(&product))
+	}
+
+	rsp := gin.H{
+		"products": created,
+		"failed":   failed,
+		"total":    len(req.Products),
+	}
 
 	handleSuccess(ctx, rsp)
 }
@@ -111,8 +168,8 @@ func (ph *ProductHandler) GetProduct(ctx *gin.Context) {
 type listProductsRequest struct {
 	CategoryID uint64 `form:"category_id" binding:"omitempty,min=1" example:"1"`
 	Query      string `form:"q" binding:"omitempty" example:"Chiki"`
-	Skip       uint64 `form:"skip" binding:"required,min=0" example:"0"`
-	Limit      uint64 `form:"limit" binding:"required,min=5" example:"5"`
+	Skip       uint64 `form:"skip" binding:"omitempty,min=0" example:"0"`
+	Limit      uint64 `form:"limit" binding:"omitempty,min=1" example:"10"`
 }
 
 // ListProducts godoc
@@ -138,6 +195,9 @@ func (ph *ProductHandler) ListProducts(ctx *gin.Context) {
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		validationError(ctx, err)
 		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 200
 	}
 
 	products, err := ph.svc.ListProducts(ctx, req.Query, req.CategoryID, req.Skip, req.Limit)

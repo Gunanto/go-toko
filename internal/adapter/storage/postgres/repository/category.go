@@ -92,7 +92,7 @@ func (cr *CategoryRepository) ListCategories(ctx context.Context, skip, limit ui
 		From("categories").
 		OrderBy("id").
 		Limit(limit).
-		Offset((skip - 1) * limit)
+		Offset(skip)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
@@ -103,6 +103,7 @@ func (cr *CategoryRepository) ListCategories(ctx context.Context, skip, limit ui
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -116,6 +117,10 @@ func (cr *CategoryRepository) ListCategories(ctx context.Context, skip, limit ui
 		}
 
 		categories = append(categories, category)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return categories, nil
