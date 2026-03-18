@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import {
   createCustomer,
   deleteCustomer,
+  getCustomer,
   listCustomers,
   updateCustomer,
 } from "../lib/api";
 
 function Customers() {
+  const navigate = useNavigate();
   const { token, logout } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,11 +32,11 @@ function Customers() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [hasNext, setHasNext] = useState(false);
 
-  const flash = (type, message) => {
+  const flash = useCallback((type, message) => {
     setNotice({ type, message });
     window.clearTimeout(flash.timeoutId);
     flash.timeoutId = window.setTimeout(() => setNotice(null), 3500);
-  };
+  }, []);
 
   const formatDate = (value) => {
     if (!value) return "-";
@@ -46,33 +49,36 @@ function Customers() {
     });
   };
 
-  const loadCustomers = async (pageIndex = page) => {
-    setLoading(true);
-    try {
-      const response = await listCustomers({
-        token,
-        skip: pageIndex * pageSize,
-        limit: pageSize,
-      });
-      const list = response?.data?.customers || [];
-      const total = response?.data?.meta?.total ?? list.length;
-      setCustomers(list);
-      setTotalCustomers(total);
-      setHasNext((pageIndex + 1) * pageSize < total);
-    } catch (error) {
-      if (error?.status === 401 || error?.status === 403) {
-        logout();
+  const loadCustomers = useCallback(
+    async (pageIndex = page) => {
+      setLoading(true);
+      try {
+        const response = await listCustomers({
+          token,
+          skip: pageIndex * pageSize,
+          limit: pageSize,
+        });
+        const list = response?.data?.customers || [];
+        const total = response?.data?.meta?.total ?? list.length;
+        setCustomers(list);
+        setTotalCustomers(total);
+        setHasNext((pageIndex + 1) * pageSize < total);
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 403) {
+          logout();
+        }
+        flash("error", error.message || "Gagal memuat pelanggan.");
+      } finally {
+        setLoading(false);
       }
-      flash("error", error.message || "Gagal memuat pelanggan.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [token, page, pageSize, logout, flash],
+  );
 
   useEffect(() => {
     if (!token) return;
     loadCustomers(page);
-  }, [token, page, pageSize]);
+  }, [token, page, pageSize, loadCustomers]);
 
   const filteredCustomers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -107,16 +113,27 @@ function Customers() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (customer) => {
-    setEditingId(customer.id);
-    setForm({
-      name: customer.name || "",
-      phone: customer.phone || "",
-      email: customer.email || "",
-      tier: customer.tier || "bronze",
-      notes: customer.notes || "",
-    });
-    setIsModalOpen(true);
+  const handleEdit = async (customer) => {
+    try {
+      const response = await getCustomer(customer.id, { token });
+      const detail = response?.data;
+      if (!detail) return;
+      setEditingId(detail.id);
+      setForm({
+        name: detail.name || "",
+        phone: detail.phone || "",
+        email: detail.email || "",
+        tier: detail.tier || "bronze",
+        notes: detail.notes || "",
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal memuat detail pelanggan.");
+    }
   };
 
   const handleDelete = async (customerId) => {
@@ -365,6 +382,12 @@ function Customers() {
                   </span>
                 </div>
                 <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => navigate(`/customers/${customer.id}`)}
+                    className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    Detail
+                  </button>
                   <button
                     onClick={() => handleEdit(customer)}
                     className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"

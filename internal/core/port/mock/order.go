@@ -56,6 +56,21 @@ func (mr *MockOrderRepositoryMockRecorder) CreateOrder(ctx, order any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderRepository)(nil).CreateOrder), ctx, order)
 }
 
+// UpdateOrderPayment mocks base method.
+func (m *MockOrderRepository) UpdateOrderPayment(ctx context.Context, order *domain.Order) (*domain.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOrderPayment", ctx, order)
+	ret0, _ := ret[0].(*domain.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateOrderPayment indicates an expected call of UpdateOrderPayment.
+func (mr *MockOrderRepositoryMockRecorder) UpdateOrderPayment(ctx, order any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderPayment", reflect.TypeOf((*MockOrderRepository)(nil).UpdateOrderPayment), ctx, order)
+}
+
 // GetOrderByID mocks base method.
 func (m *MockOrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain.Order, error) {
 	m.ctrl.T.Helper()
@@ -69,6 +84,21 @@ func (m *MockOrderRepository) GetOrderByID(ctx context.Context, id uint64) (*dom
 func (mr *MockOrderRepositoryMockRecorder) GetOrderByID(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByID", reflect.TypeOf((*MockOrderRepository)(nil).GetOrderByID), ctx, id)
+}
+
+// GetOrderByReceiptCode mocks base method.
+func (m *MockOrderRepository) GetOrderByReceiptCode(ctx context.Context, receiptCode string) (*domain.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderByReceiptCode", ctx, receiptCode)
+	ret0, _ := ret[0].(*domain.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderByReceiptCode indicates an expected call of GetOrderByReceiptCode.
+func (mr *MockOrderRepositoryMockRecorder) GetOrderByReceiptCode(ctx, receiptCode any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByReceiptCode", reflect.TypeOf((*MockOrderRepository)(nil).GetOrderByReceiptCode), ctx, receiptCode)
 }
 
 // ListOrders mocks base method.
@@ -139,6 +169,21 @@ func (mr *MockOrderServiceMockRecorder) CreateOrder(ctx, order any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrder", reflect.TypeOf((*MockOrderService)(nil).CreateOrder), ctx, order)
 }
 
+// CreateStoreOrder mocks base method.
+func (m *MockOrderService) CreateStoreOrder(ctx context.Context, order *domain.Order) (*domain.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateStoreOrder", ctx, order)
+	ret0, _ := ret[0].(*domain.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateStoreOrder indicates an expected call of CreateStoreOrder.
+func (mr *MockOrderServiceMockRecorder) CreateStoreOrder(ctx, order any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStoreOrder", reflect.TypeOf((*MockOrderService)(nil).CreateStoreOrder), ctx, order)
+}
+
 // GetOrder mocks base method.
 func (m *MockOrderService) GetOrder(ctx context.Context, id uint64) (*domain.Order, error) {
 	m.ctrl.T.Helper()
@@ -152,6 +197,36 @@ func (m *MockOrderService) GetOrder(ctx context.Context, id uint64) (*domain.Ord
 func (mr *MockOrderServiceMockRecorder) GetOrder(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrder", reflect.TypeOf((*MockOrderService)(nil).GetOrder), ctx, id)
+}
+
+// GetStoreOrderByReceiptCode mocks base method.
+func (m *MockOrderService) GetStoreOrderByReceiptCode(ctx context.Context, receiptCode string) (*domain.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStoreOrderByReceiptCode", ctx, receiptCode)
+	ret0, _ := ret[0].(*domain.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStoreOrderByReceiptCode indicates an expected call of GetStoreOrderByReceiptCode.
+func (mr *MockOrderServiceMockRecorder) GetStoreOrderByReceiptCode(ctx, receiptCode any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStoreOrderByReceiptCode", reflect.TypeOf((*MockOrderService)(nil).GetStoreOrderByReceiptCode), ctx, receiptCode)
+}
+
+// PayOrder mocks base method.
+func (m *MockOrderService) PayOrder(ctx context.Context, id uint64, totalPaid float64) (*domain.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PayOrder", ctx, id, totalPaid)
+	ret0, _ := ret[0].(*domain.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PayOrder indicates an expected call of PayOrder.
+func (mr *MockOrderServiceMockRecorder) PayOrder(ctx, id, totalPaid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PayOrder", reflect.TypeOf((*MockOrderService)(nil).PayOrder), ctx, id, totalPaid)
 }
 
 // ListOrders mocks base method.
@@ -168,4 +243,20 @@ func (m *MockOrderService) ListOrders(ctx context.Context, filter port.OrderList
 func (mr *MockOrderServiceMockRecorder) ListOrders(ctx, filter, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOrders", reflect.TypeOf((*MockOrderService)(nil).ListOrders), ctx, filter, skip, limit)
+}
+
+// ListStoreOrdersByCustomer mocks base method.
+func (m *MockOrderService) ListStoreOrdersByCustomer(ctx context.Context, phone, email string, skip, limit uint64) ([]domain.Order, uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListStoreOrdersByCustomer", ctx, phone, email, skip, limit)
+	ret0, _ := ret[0].([]domain.Order)
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListStoreOrdersByCustomer indicates an expected call of ListStoreOrdersByCustomer.
+func (mr *MockOrderServiceMockRecorder) ListStoreOrdersByCustomer(ctx, phone, email, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStoreOrdersByCustomer", reflect.TypeOf((*MockOrderService)(nil).ListStoreOrdersByCustomer), ctx, phone, email, skip, limit)
 }

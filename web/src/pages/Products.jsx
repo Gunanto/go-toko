@@ -1,13 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import {
   bulkCreateProducts,
   createCategory,
   createProduct,
+  deleteCategory,
   deleteProduct,
+  getCategory,
+  getProduct,
   listCategories,
   listProducts,
+  updateCategory,
   updateProduct,
 } from "../lib/api";
 
@@ -65,6 +70,7 @@ const parseCsv = (text) => {
 };
 
 function Products() {
+  const navigate = useNavigate();
   const { token, logout, user } = useAuth();
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState([]);
@@ -83,23 +89,30 @@ function Products() {
   });
   const [sort, setSort] = useState({ field: "name", direction: "asc" });
   const [editingId, setEditingId] = useState(null);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [categoryDraft, setCategoryDraft] = useState("");
   const [form, setForm] = useState({
     name: "",
     sku: "",
+    slug: "",
+    description: "",
     stock: "",
     price: "",
     cost: "",
     category: "",
     image: "",
+    gallery: "",
+    status: "draft",
+    promoLabel: "",
   });
   const fileInputRef = useRef(null);
   const isAdmin = user?.role === "admin";
 
-  const flash = (type, message) => {
+  const flash = useCallback((type, message) => {
     setNotice({ type, message });
     window.clearTimeout(flash.timeoutId);
     flash.timeoutId = window.setTimeout(() => setNotice(null), 3500);
-  };
+  }, []);
 
   const warnAdminOnly = () => {
     flash("error", "Hanya Admin yang dapat mengerjakan.");
@@ -109,13 +122,23 @@ function Products() {
     setForm({
       name: "",
       sku: "",
+      slug: "",
+      description: "",
       stock: "",
       price: "",
       cost: "",
       category: "",
       image: "",
+      gallery: "",
+      status: "draft",
+      promoLabel: "",
     });
     setEditingId(null);
+  };
+
+  const resetCategoryEditor = () => {
+    setEditingCategoryId(null);
+    setCategoryDraft("");
   };
 
   const handleChange = (event) => {
@@ -212,11 +235,16 @@ function Products() {
       id: product.id,
       name: product.name,
       sku: product.sku || `SKU-${product.id}`,
+      slug: product.slug || "",
+      description: product.description || "",
       stock: product.stock ?? 0,
       price: product.price ?? 0,
       cost: product.cost ?? 0,
       category: product.category?.name || "Umum",
       image: product.image || placeholderImage,
+      galleryImages: product.gallery_images || product.galleryImages || [],
+      status: product.status || "draft",
+      promoLabel: product.promo_label || product.promoLabel || "",
     };
   };
 
@@ -241,6 +269,104 @@ function Products() {
     return null;
   };
 
+  const handleEditCategory = (category) => {
+    if (!isAdmin) {
+      warnAdminOnly();
+      return;
+    }
+    setEditingCategoryId(category.id);
+    setCategoryDraft(category.name);
+  };
+
+  const handleEditCategoryDetail = async (categoryId) => {
+    if (!isAdmin) {
+      warnAdminOnly();
+      return;
+    }
+    try {
+      const response = await getCategory(categoryId, { token });
+      const category = response?.data;
+      if (!category) return;
+      handleEditCategory(category);
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal memuat detail kategori.");
+    }
+  };
+
+  const handleSaveCategory = async () => {
+    if (!isAdmin) {
+      warnAdminOnly();
+      return;
+    }
+    if (!editingCategoryId || !categoryDraft.trim()) {
+      flash("error", "Nama kategori wajib diisi.");
+      return;
+    }
+    try {
+      const response = await updateCategory(
+        editingCategoryId,
+        { name: categoryDraft.trim() },
+        { token },
+      );
+      const updated = response?.data;
+      if (updated?.id) {
+        setCategories((prev) =>
+          prev.map((category) =>
+            category.id === updated.id ? updated : category,
+          ),
+        );
+        setProducts((prev) =>
+          prev.map((product) =>
+            product.category ===
+            categories.find((item) => item.id === updated.id)?.name
+              ? { ...product, category: updated.name }
+              : product,
+          ),
+        );
+      }
+      flash("success", "Kategori diperbarui.");
+      resetCategoryEditor();
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal memperbarui kategori.");
+    }
+  };
+
+  const handleDeleteCategory = async (category) => {
+    if (!isAdmin) {
+      warnAdminOnly();
+      return;
+    }
+    const used = products.some((product) => product.category === category.name);
+    if (used) {
+      flash("error", "Kategori masih dipakai produk dan belum bisa dihapus.");
+      return;
+    }
+    const confirmed = window.confirm(`Hapus kategori ${category.name}?`);
+    if (!confirmed) return;
+    try {
+      await deleteCategory(category.id, { token });
+      setCategories((prev) => prev.filter((item) => item.id !== category.id));
+      if (editingCategoryId === category.id) {
+        resetCategoryEditor();
+      }
+      flash("success", "Kategori dihapus.");
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal menghapus kategori.");
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!isAdmin) {
@@ -260,6 +386,10 @@ function Products() {
     const stock = Number(form.stock);
     const category = form.category.trim() || "Umum";
     const image = form.image.trim() || placeholderImage;
+    const galleryImages = form.gallery
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
 
     setSaving(true);
     try {
@@ -274,10 +404,15 @@ function Products() {
           {
             category_id: categoryId,
             name: form.name.trim(),
+            slug: form.slug.trim(),
+            description: form.description.trim(),
             image,
+            gallery_images: galleryImages,
             price,
             cost: Number.isNaN(cost) ? 0 : cost,
             stock: Number.isNaN(stock) ? 0 : stock,
+            status: form.status,
+            promo_label: form.promoLabel.trim(),
           },
           { token },
         );
@@ -295,10 +430,15 @@ function Products() {
           {
             category_id: categoryId,
             name: form.name.trim(),
+            slug: form.slug.trim(),
+            description: form.description.trim(),
             image,
+            gallery_images: galleryImages,
             price,
             cost: Number.isNaN(cost) ? 0 : cost,
             stock: Number.isNaN(stock) ? 0 : stock,
+            status: form.status,
+            promo_label: form.promoLabel.trim(),
           },
           { token },
         );
@@ -320,22 +460,38 @@ function Products() {
     }
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = async (product) => {
     if (!isAdmin) {
       warnAdminOnly();
       return;
     }
-    setEditingId(product.id);
-    setForm({
-      name: product.name,
-      sku: product.sku,
-      stock: product.stock.toString(),
-      price: product.price.toString(),
-      cost: product.cost?.toString() || "",
-      category: product.category,
-      image: product.image || "",
-    });
-    setIsModalOpen(true);
+    try {
+      const response = await getProduct(product.id, { token });
+      const detail = normalizeProduct(response?.data);
+      if (!detail) return;
+      setEditingId(detail.id);
+      setForm({
+        name: detail.name,
+        sku: detail.sku,
+        slug: detail.slug || "",
+        description: detail.description || "",
+        stock: detail.stock.toString(),
+        price: detail.price.toString(),
+        cost: detail.cost?.toString() || "",
+        category: detail.category,
+        image: detail.image || "",
+        gallery: (detail.galleryImages || []).join("\n"),
+        status: detail.status || "draft",
+        promoLabel: detail.promoLabel || "",
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal memuat detail produk.");
+    }
   };
 
   const handleDelete = async (product) => {
@@ -525,7 +681,7 @@ function Products() {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [token, logout, flash]);
 
   return (
     <>
@@ -578,6 +734,75 @@ function Products() {
         </div>
       )}
 
+      <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-soft-xl dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Manajemen Kategori
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
+              Kelola kategori produk yang dipakai di katalog.
+            </p>
+          </div>
+          {editingCategoryId ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                value={categoryDraft}
+                onChange={(event) => setCategoryDraft(event.target.value)}
+                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                placeholder="Nama kategori"
+              />
+              <button
+                type="button"
+                onClick={handleSaveCategory}
+                className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+              >
+                Simpan
+              </button>
+              <button
+                type="button"
+                onClick={resetCategoryEditor}
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Batal
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {categories.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-200 px-4 py-3 text-sm text-gray-500 dark:border-slate-800 dark:text-slate-400">
+              Belum ada kategori.
+            </div>
+          ) : (
+            categories.map((category) => (
+              <div
+                key={category.id}
+                className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">
+                  {category.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleEditCategoryDetail(category.id)}
+                  className="text-xs font-semibold text-cyan-700 dark:text-cyan-300"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCategory(category)}
+                  className="text-xs font-semibold text-rose-600"
+                >
+                  Hapus
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-soft-xl dark:bg-slate-950">
@@ -612,6 +837,18 @@ function Products() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                    Slug
+                  </label>
+                  <input
+                    name="slug"
+                    value={form.slug}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                    placeholder="kopi-susu-1l"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
                     SKU (Otomatis)
                   </label>
                   <input
@@ -638,6 +875,19 @@ function Products() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                  Deskripsi
+                </label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  rows={4}
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  placeholder="Deskripsi singkat untuk halaman admin dan katalog."
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
                   Gambar (URL)
                 </label>
                 <input
@@ -646,6 +896,19 @@ function Products() {
                   onChange={handleChange}
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                   placeholder={placeholderImage}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                  Gallery Images
+                </label>
+                <textarea
+                  name="gallery"
+                  value={form.gallery}
+                  onChange={handleChange}
+                  rows={3}
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  placeholder={"Satu URL per baris\nhttps://...\nhttps://..."}
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -677,17 +940,45 @@ function Products() {
                   />
                 </div>
               </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                    Harga Pokok
+                  </label>
+                  <input
+                    name="cost"
+                    value={form.cost}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                    placeholder="50000"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                    Promo Label
+                  </label>
+                  <input
+                    name="promoLabel"
+                    value={form.promoLabel}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                    placeholder="Best Seller"
+                  />
+                </div>
+              </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                  Harga Pokok
+                  Status Publikasi
                 </label>
-                <input
-                  name="cost"
-                  value={form.cost}
+                <select
+                  name="status"
+                  value={form.status}
                   onChange={handleChange}
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                  placeholder="50000"
-                />
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
               </div>
               <button
                 type="submit"
@@ -876,6 +1167,12 @@ function Products() {
                   <td>{formatCurrency(product.cost)}</td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => navigate(`/products/${product.id}`)}
+                        className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        Detail
+                      </button>
                       <button
                         onClick={() => handleEdit(product)}
                         className="rounded-lg border border-cyan-200 px-3 py-1 text-xs font-semibold text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-200 dark:hover:bg-cyan-500/10"

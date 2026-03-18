@@ -40,6 +40,33 @@ export async function fetchMe(token) {
   return request("/users/me", { token });
 }
 
+export async function listUsers({ token, skip = 0, limit = 100 } = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  return request(`/users?${params.toString()}`, { token });
+}
+
+export async function getUser(id, { token } = {}) {
+  return request(`/users/${id}`, { token });
+}
+
+export async function updateUser(id, payload, { token } = {}) {
+  return request(`/users/${id}`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteUser(id, { token } = {}) {
+  return request(`/users/${id}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
 export async function listCategories({ token, skip = 0, limit = 100 } = {}) {
   const params = new URLSearchParams({
     skip: String(skip),
@@ -53,6 +80,25 @@ export async function createCategory(name, { token } = {}) {
     method: "POST",
     token,
     body: JSON.stringify({ name }),
+  });
+}
+
+export async function getCategory(id, { token } = {}) {
+  return request(`/categories/${id}`, { token });
+}
+
+export async function updateCategory(id, payload, { token } = {}) {
+  return request(`/categories/${id}`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCategory(id, { token } = {}) {
+  return request(`/categories/${id}`, {
+    method: "DELETE",
+    token,
   });
 }
 
@@ -78,6 +124,72 @@ export async function createProduct(payload, { token } = {}) {
     token,
     body: JSON.stringify(payload),
   });
+}
+
+export async function getProduct(id, { token } = {}) {
+  return request(`/products/${id}`, { token });
+}
+
+export async function listStoreProducts({
+  skip = 0,
+  limit = 100,
+  query = "",
+  categoryId = "",
+} = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  if (query) params.set("q", query);
+  if (categoryId) params.set("category_id", String(categoryId));
+  return request(`/store/products?${params.toString()}`);
+}
+
+export async function getStoreProductBySlug(slug) {
+  return request(`/store/products/${slug}`);
+}
+
+export async function listStorePayments({ skip = 0, limit = 50 } = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  return request(`/store/payments?${params.toString()}`);
+}
+
+export async function findStoreCustomer({ phone = "", email = "" } = {}) {
+  const params = new URLSearchParams();
+  if (phone) params.set("phone", phone);
+  if (email) params.set("email", email);
+  return request(`/store/customers/lookup?${params.toString()}`);
+}
+
+export async function registerStoreCustomer(payload) {
+  return request("/store/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchStoreAuthOptions() {
+  return request("/store/auth/options");
+}
+
+export async function loginStoreCustomer(login, password) {
+  return request("/store/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ login, password }),
+  });
+}
+
+export async function fetchStoreCustomerMe(token) {
+  return request("/store/auth/me", { token });
+}
+
+export function getStoreGoogleAuthStartUrl(redirect = "/store/account") {
+  const apiBase = API_BASE.endsWith("/v1") ? API_BASE.slice(0, -3) : API_BASE;
+  const params = new URLSearchParams({ redirect });
+  return `${apiBase}/v1/store/auth/google/start?${params.toString()}`;
 }
 
 export async function bulkCreateProducts(products, { token } = {}) {
@@ -111,6 +223,33 @@ export async function listPayments({ token, skip = 0, limit = 50 } = {}) {
   return request(`/payments?${params.toString()}`, { token });
 }
 
+export async function createPayment(payload, { token } = {}) {
+  return request("/payments", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getPayment(id, { token } = {}) {
+  return request(`/payments/${id}`, { token });
+}
+
+export async function updatePayment(id, payload, { token } = {}) {
+  return request(`/payments/${id}`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deletePayment(id, { token } = {}) {
+  return request(`/payments/${id}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
 export async function listOrders({
   token,
   skip = 0,
@@ -137,12 +276,54 @@ export async function createOrder(payload, { token } = {}) {
   });
 }
 
+export async function createStoreOrder(payload) {
+  return request("/store/orders", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function listStoreOrdersHistory({
+  phone = "",
+  email = "",
+  skip = 0,
+  limit = 10,
+} = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  if (phone) params.set("phone", phone);
+  if (email) params.set("email", email);
+  return request(`/store/orders/history?${params.toString()}`);
+}
+
+export async function getStoreOrderByReceipt(receiptCode) {
+  return request(`/store/orders/${encodeURIComponent(receiptCode)}`);
+}
+
+export async function getOrder(id, { token } = {}) {
+  return request(`/orders/${id}`, { token });
+}
+
+export async function payOrder(id, payload, { token } = {}) {
+  return request(`/orders/${id}/pay`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function listCustomers({ token, skip = 0, limit = 200 } = {}) {
   const params = new URLSearchParams({
     skip: String(skip),
     limit: String(limit),
   });
   return request(`/customers?${params.toString()}`, { token });
+}
+
+export async function getCustomer(id, { token } = {}) {
+  return request(`/customers/${id}`, { token });
 }
 
 export async function createCustomer(payload, { token } = {}) {
@@ -165,5 +346,21 @@ export async function deleteCustomer(id, { token } = {}) {
   return request(`/customers/${id}`, {
     method: "DELETE",
     token,
+  });
+}
+
+export async function fetchSettings({ token } = {}) {
+  return request("/settings", { token });
+}
+
+export async function fetchStoreSettings() {
+  return request("/store/settings");
+}
+
+export async function updateSettings(payload, { token } = {}) {
+  return request("/settings", {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
   });
 }

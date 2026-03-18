@@ -4,14 +4,20 @@ import "time"
 
 // Customer represents a customer record
 type Customer struct {
-	ID        uint64
-	Name      string
-	Phone     string
-	Email     string
-	Tier      string
-	Notes     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           uint64
+	Name         string
+	Phone        string
+	Email        string
+	Address      string
+	Tier         string
+	Notes        string
+	Password     string
+	GoogleID     string
+	AvatarURL    string
+	AuthProvider string
+	LastLoginAt  *time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 // CustomerSummary represents aggregated customer statistics from orders.

@@ -1,6 +1,8 @@
 package http
 
 import (
+	"strings"
+
 	"github.com/bagashiz/go-pos/internal/core/domain"
 	"github.com/bagashiz/go-pos/internal/core/port"
 	"github.com/gin-gonic/gin"
@@ -20,12 +22,17 @@ func NewProductHandler(svc port.ProductService) *ProductHandler {
 
 // createProductRequest represents a request body for creating a new product
 type createProductRequest struct {
-	CategoryID uint64  `json:"category_id" binding:"required,min=1" example:"1"`
-	Name       string  `json:"name" binding:"required" example:"Chiki Ball"`
-	Image      string  `json:"image" binding:"required" example:"https://example.com/chiki-ball.png"`
-	Price      float64 `json:"price" binding:"required,min=0" example:"5000"`
-	Cost       float64 `json:"cost" binding:"omitempty,min=0" example:"3000"`
-	Stock      int64   `json:"stock" binding:"required,min=0" example:"100"`
+	CategoryID    uint64   `json:"category_id" binding:"required,min=1" example:"1"`
+	Name          string   `json:"name" binding:"required" example:"Chiki Ball"`
+	Slug          string   `json:"slug" binding:"omitempty" example:"chiki-ball"`
+	Description   string   `json:"description" binding:"omitempty" example:"Snack ringan untuk jualan harian"`
+	Image         string   `json:"image" binding:"required" example:"https://example.com/chiki-ball.png"`
+	GalleryImages []string `json:"gallery_images" binding:"omitempty" example:"https://example.com/chiki-ball.png"`
+	Price         float64  `json:"price" binding:"required,min=0" example:"5000"`
+	Cost          float64  `json:"cost" binding:"omitempty,min=0" example:"3000"`
+	Stock         int64    `json:"stock" binding:"required,min=0" example:"100"`
+	Status        string   `json:"status" binding:"omitempty,oneof=draft published" example:"published"`
+	PromoLabel    string   `json:"promo_label" binding:"omitempty" example:"Best Seller"`
 }
 
 // bulkCreateProductsRequest represents a request body for creating products in bulk
@@ -58,12 +65,17 @@ func (ph *ProductHandler) CreateProduct(ctx *gin.Context) {
 	}
 
 	product := domain.Product{
-		CategoryID: req.CategoryID,
-		Name:       req.Name,
-		Image:      req.Image,
-		Price:      req.Price,
-		Cost:       req.Cost,
-		Stock:      req.Stock,
+		CategoryID:    req.CategoryID,
+		Name:          req.Name,
+		Slug:          req.Slug,
+		Description:   req.Description,
+		Image:         req.Image,
+		GalleryImages: req.GalleryImages,
+		Price:         req.Price,
+		Cost:          req.Cost,
+		Stock:         req.Stock,
+		Status:        req.Status,
+		PromoLabel:    req.PromoLabel,
 	}
 
 	_, err := ph.svc.CreateProduct(ctx, &product)
@@ -104,11 +116,17 @@ func (ph *ProductHandler) BulkCreateProducts(ctx *gin.Context) {
 
 	for _, item := range req.Products {
 		product := domain.Product{
-			CategoryID: item.CategoryID,
-			Name:       item.Name,
-			Image:      item.Image,
-			Price:      item.Price,
-			Stock:      item.Stock,
+			CategoryID:    item.CategoryID,
+			Name:          item.Name,
+			Slug:          item.Slug,
+			Description:   item.Description,
+			Image:         item.Image,
+			GalleryImages: item.GalleryImages,
+			Price:         item.Price,
+			Cost:          item.Cost,
+			Stock:         item.Stock,
+			Status:        item.Status,
+			PromoLabel:    item.PromoLabel,
 		}
 
 		_, err := ph.svc.CreateProduct(ctx, &product)
@@ -219,14 +237,91 @@ func (ph *ProductHandler) ListProducts(ctx *gin.Context) {
 	handleSuccess(ctx, rsp)
 }
 
+// ListPublishedProducts godoc
+//
+//	@Summary		List published products
+//	@Description	list published products for storefront/catalog
+//	@Tags			Storefront
+//	@Accept			json
+//	@Produce		json
+//	@Param			category_id	query		uint64			false	"Category ID"
+//	@Param			q			query		string			false	"Query"
+//	@Param			skip		query		uint64			true	"Skip"
+//	@Param			limit		query		uint64			true	"Limit"
+//	@Success		200			{object}	meta			"Published products retrieved"
+//	@Failure		400			{object}	errorResponse	"Validation error"
+//	@Failure		500			{object}	errorResponse	"Internal server error"
+//	@Router			/store/products [get]
+func (ph *ProductHandler) ListPublishedProducts(ctx *gin.Context) {
+	var req listProductsRequest
+	var productsList []productResponse
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		validationError(ctx, err)
+		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 200
+	}
+
+	products, err := ph.svc.ListPublishedProducts(ctx, req.Query, req.CategoryID, req.Skip, req.Limit)
+	if err != nil {
+		handleError(ctx, err)
+		return
+	}
+
+	for _, product := range products {
+		productsList = append(productsList, newProductResponse(&product))
+	}
+
+	total := uint64(len(productsList))
+	meta := newMeta(total, req.Limit, req.Skip)
+	rsp := toMap(meta, productsList, "products")
+
+	handleSuccess(ctx, rsp)
+}
+
+// GetPublishedProductBySlug godoc
+//
+//	@Summary		Get published product by slug
+//	@Description	get a published product by slug for storefront/catalog
+//	@Tags			Storefront
+//	@Accept			json
+//	@Produce		json
+//	@Param			slug	path		string			true	"Product slug"
+//	@Success		200		{object}	productResponse	"Published product retrieved"
+//	@Failure		404		{object}	errorResponse	"Data not found error"
+//	@Failure		500		{object}	errorResponse	"Internal server error"
+//	@Router			/store/products/{slug} [get]
+func (ph *ProductHandler) GetPublishedProductBySlug(ctx *gin.Context) {
+	slug := strings.TrimSpace(ctx.Param("slug"))
+	if slug == "" {
+		handleError(ctx, domain.ErrDataNotFound)
+		return
+	}
+
+	product, err := ph.svc.GetPublishedProductBySlug(ctx, slug)
+	if err != nil {
+		handleError(ctx, err)
+		return
+	}
+
+	handleSuccess(ctx, newProductResponse(product))
+}
+
 // updateProductRequest represents a request body for updating a product
 type updateProductRequest struct {
-	CategoryID uint64  `json:"category_id" binding:"omitempty,required,min=1" example:"1"`
-	Name       string  `json:"name" binding:"omitempty,required" example:"Nutrisari Jeruk"`
-	Image      string  `json:"image" binding:"omitempty,required" example:"https://example.com/nutrisari-jeruk.png"`
-	Price      float64 `json:"price" binding:"omitempty,required,min=0" example:"2000"`
-	Cost       float64 `json:"cost" binding:"omitempty,min=0" example:"1500"`
-	Stock      int64   `json:"stock" binding:"omitempty,required,min=0" example:"200"`
+	CategoryID    uint64   `json:"category_id" binding:"omitempty,required,min=1" example:"1"`
+	Name          string   `json:"name" binding:"omitempty,required" example:"Nutrisari Jeruk"`
+	Slug          string   `json:"slug" binding:"omitempty" example:"nutrisari-jeruk"`
+	Description   string   `json:"description" binding:"omitempty" example:"Minuman serbuk rasa jeruk"`
+	Image         string   `json:"image" binding:"omitempty,required" example:"https://example.com/nutrisari-jeruk.png"`
+	GalleryImages []string `json:"gallery_images" binding:"omitempty"`
+	Price         float64  `json:"price" binding:"omitempty,required,min=0" example:"2000"`
+	Cost          float64  `json:"cost" binding:"omitempty,min=0" example:"1500"`
+	Stock         int64    `json:"stock" binding:"omitempty,required,min=0" example:"200"`
+	Status        string   `json:"status" binding:"omitempty,oneof=draft published" example:"draft"`
+	PromoLabel    string   `json:"promo_label" binding:"omitempty" example:"Promo Ramadan"`
 }
 
 // UpdateProduct godoc
@@ -262,13 +357,18 @@ func (ph *ProductHandler) UpdateProduct(ctx *gin.Context) {
 	}
 
 	product := domain.Product{
-		ID:         id,
-		CategoryID: req.CategoryID,
-		Name:       req.Name,
-		Image:      req.Image,
-		Price:      req.Price,
-		Cost:       req.Cost,
-		Stock:      req.Stock,
+		ID:            id,
+		CategoryID:    req.CategoryID,
+		Name:          req.Name,
+		Slug:          req.Slug,
+		Description:   req.Description,
+		Image:         req.Image,
+		GalleryImages: req.GalleryImages,
+		Price:         req.Price,
+		Cost:          req.Cost,
+		Stock:         req.Stock,
+		Status:        req.Status,
+		PromoLabel:    req.PromoLabel,
 	}
 
 	_, err = ph.svc.UpdateProduct(ctx, &product)

@@ -26,11 +26,13 @@ func NewRouter(
 	token port.TokenService,
 	userHandler UserHandler,
 	authHandler AuthHandler,
+	storeAuthHandler StoreAuthHandler,
 	paymentHandler PaymentHandler,
 	categoryHandler CategoryHandler,
 	productHandler ProductHandler,
 	orderHandler OrderHandler,
 	customerHandler CustomerHandler,
+	settingHandler SettingHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if config.Env == "production" {
@@ -92,6 +94,30 @@ func NewRouter(
 
 	v1 := router.Group("/v1")
 	{
+		store := v1.Group("/store")
+		{
+			storeAuth := store.Group("/auth")
+			{
+				storeAuth.GET("/options", storeAuthHandler.Options)
+				storeAuth.POST("/register", storeAuthHandler.Register)
+				storeAuth.POST("/login", storeAuthHandler.Login)
+				storeAuth.GET("/google/start", storeAuthHandler.GoogleStart)
+				storeAuth.GET("/google/callback", storeAuthHandler.GoogleCallback)
+				storeAuthProtected := storeAuth.Group("/")
+				storeAuthProtected.Use(customerAuthMiddleware(token))
+				{
+					storeAuthProtected.GET("/me", storeAuthHandler.GetMe)
+				}
+			}
+			store.GET("/settings", settingHandler.GetSettings)
+			store.GET("/payments", paymentHandler.ListPayments)
+			store.GET("/products", productHandler.ListPublishedProducts)
+			store.GET("/products/:slug", productHandler.GetPublishedProductBySlug)
+			store.GET("/customers/lookup", customerHandler.FindCustomer)
+			store.GET("/orders/history", orderHandler.ListStoreOrdersByCustomer)
+			store.GET("/orders/:receipt_code", orderHandler.GetStoreOrderByReceiptCode)
+			store.POST("/orders", orderHandler.CreateStoreOrder)
+		}
 		user := v1.Group("/users")
 		{
 			user.POST("", userHandler.Register)
@@ -161,6 +187,7 @@ func NewRouter(
 			order.POST("", orderHandler.CreateOrder)
 			order.GET("", orderHandler.ListOrders)
 			order.GET("/:id", orderHandler.GetOrder)
+			order.PUT("/:id/pay", orderHandler.PayOrder)
 		}
 		customer := v1.Group("/customers")
 		customer.Use(authMiddleware(token))
@@ -174,6 +201,17 @@ func NewRouter(
 				admin.POST("", customerHandler.CreateCustomer)
 				admin.PUT("/:id", customerHandler.UpdateCustomer)
 				admin.DELETE("/:id", customerHandler.DeleteCustomer)
+			}
+		}
+		settings := v1.Group("/settings")
+		settings.Use(authMiddleware(token))
+		{
+			settings.GET("", settingHandler.GetSettings)
+
+			admin := settings.Group("/")
+			admin.Use(adminMiddleware())
+			{
+				admin.PUT("", settingHandler.UpdateSettings)
 			}
 		}
 	}

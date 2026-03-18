@@ -107,10 +107,6 @@ func main() {
 	userService := service.NewUserService(userRepo, cache)
 	userHandler := http.NewUserHandler(userService)
 
-	// Auth
-	authService := service.NewAuthService(userRepo, token)
-	authHandler := http.NewAuthHandler(authService)
-
 	// Payment
 	paymentRepo := repository.NewPaymentRepository(db)
 	paymentService := service.NewPaymentService(paymentRepo, cache)
@@ -126,15 +122,34 @@ func main() {
 	productService := service.NewProductService(productRepo, categoryRepo, cache)
 	productHandler := http.NewProductHandler(productService)
 
-	// Order
-	orderRepo := repository.NewOrderRepository(db)
-	orderService := service.NewOrderService(orderRepo, productRepo, categoryRepo, userRepo, paymentRepo, cache)
-	orderHandler := http.NewOrderHandler(orderService)
-
 	// Customer
 	customerRepo := repository.NewCustomerRepository(db)
 	customerService := service.NewCustomerService(customerRepo, cache)
 	customerHandler := http.NewCustomerHandler(customerService)
+
+	// Auth
+	authService := service.NewAuthService(userRepo, token)
+	authHandler := http.NewAuthHandler(authService)
+
+	// Store auth
+	storeGoogleConfig := service.StoreGoogleConfig{
+		ClientID:         config.StoreGoogle.ClientID,
+		ClientSecret:     config.StoreGoogle.ClientSecret,
+		RedirectURL:      config.StoreGoogle.RedirectURL,
+		FrontendRedirect: config.StoreGoogle.FrontendRedirect,
+	}
+	storeAuthService := service.NewStoreAuthService(customerRepo, cache, token, storeGoogleConfig)
+	storeAuthHandler := http.NewStoreAuthHandler(storeAuthService)
+
+	// Order
+	orderRepo := repository.NewOrderRepository(db)
+	orderService := service.NewOrderService(orderRepo, productRepo, categoryRepo, customerRepo, userRepo, paymentRepo, cache)
+	orderHandler := http.NewOrderHandler(orderService)
+
+	// Settings
+	settingRepo := repository.NewSettingRepository(db)
+	settingService := service.NewSettingService(settingRepo, cache)
+	settingHandler := http.NewSettingHandler(settingService)
 
 	// Init router
 	router, err := http.NewRouter(
@@ -142,11 +157,13 @@ func main() {
 		token,
 		*userHandler,
 		*authHandler,
+		*storeAuthHandler,
 		*paymentHandler,
 		*categoryHandler,
 		*productHandler,
 		*orderHandler,
 		*customerHandler,
+		*settingHandler,
 	)
 	if err != nil {
 		slog.Error("Error initializing router", "error", err)

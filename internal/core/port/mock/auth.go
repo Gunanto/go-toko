@@ -55,6 +55,21 @@ func (mr *MockTokenServiceMockRecorder) CreateToken(user any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateToken", reflect.TypeOf((*MockTokenService)(nil).CreateToken), user)
 }
 
+// CreateCustomerToken mocks base method.
+func (m *MockTokenService) CreateCustomerToken(customer *domain.Customer) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCustomerToken", customer)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCustomerToken indicates an expected call of CreateCustomerToken.
+func (mr *MockTokenServiceMockRecorder) CreateCustomerToken(customer any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomerToken", reflect.TypeOf((*MockTokenService)(nil).CreateCustomerToken), customer)
+}
+
 // VerifyToken mocks base method.
 func (m *MockTokenService) VerifyToken(token string) (*domain.TokenPayload, error) {
 	m.ctrl.T.Helper()

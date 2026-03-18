@@ -9,7 +9,7 @@ function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
 
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const handleChange = (event) => {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));

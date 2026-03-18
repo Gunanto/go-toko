@@ -25,6 +25,10 @@ services:
       REDIS_PASSWORD: ""
       TOKEN_DURATION: "15m"
       TOKEN_KEY_HEX: "${TOKEN_KEY_HEX}"
+      STORE_GOOGLE_CLIENT_ID: "${STORE_GOOGLE_CLIENT_ID}"
+      STORE_GOOGLE_CLIENT_SECRET: "${STORE_GOOGLE_CLIENT_SECRET}"
+      STORE_GOOGLE_REDIRECT_URL: "${STORE_GOOGLE_REDIRECT_URL}"
+      STORE_GOOGLE_FRONTEND_REDIRECT: "${STORE_GOOGLE_FRONTEND_REDIRECT}"
 
   app-dev:
     image: golang:1.23-alpine
@@ -53,8 +57,12 @@ services:
       REDIS_PASSWORD: ""
       TOKEN_DURATION: "15m"
       TOKEN_KEY_HEX: "${TOKEN_KEY_HEX}"
+      STORE_GOOGLE_CLIENT_ID: "${STORE_GOOGLE_CLIENT_ID}"
+      STORE_GOOGLE_CLIENT_SECRET: "${STORE_GOOGLE_CLIENT_SECRET}"
+      STORE_GOOGLE_REDIRECT_URL: "${STORE_GOOGLE_REDIRECT_URL}"
+      STORE_GOOGLE_FRONTEND_REDIRECT: "${STORE_GOOGLE_FRONTEND_REDIRECT}"
     command: >
-      sh -c "go install github.com/air-verse/air@v1.61.5 && /go/bin/air -c .air.toml"
+      sh -c "go run ./cmd/http"
 
   web:
     image: node:20-alpine
@@ -68,7 +76,7 @@ services:
       - "${WEB_HOST_PORT:-5175}:5173"
     environment:
       VITE_API_BASE: "/v1"
-      VITE_PROXY_TARGET: "http://app:8082"
+      VITE_PROXY_TARGET: "http://app-dev:8082"
     command: >
       sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
 

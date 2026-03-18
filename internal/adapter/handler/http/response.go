@@ -113,50 +113,95 @@ func newCategoryResponse(category *domain.Category) categoryResponse {
 
 // productResponse represents a product response body
 type productResponse struct {
-	ID        uint64           `json:"id" example:"1"`
-	SKU       string           `json:"sku" example:"9a4c25d3-9786-492c-b084-85cb75c1ee3e"`
-	Name      string           `json:"name" example:"Chiki Ball"`
-	Stock     int64            `json:"stock" example:"100"`
-	Price     float64          `json:"price" example:"5000"`
-	Cost      float64          `json:"cost" example:"3000"`
-	Image     string           `json:"image" example:"https://example.com/chiki-ball.png"`
-	Category  categoryResponse `json:"category"`
-	CreatedAt time.Time        `json:"created_at" example:"1970-01-01T00:00:00Z"`
-	UpdatedAt time.Time        `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+	ID            uint64           `json:"id" example:"1"`
+	SKU           string           `json:"sku" example:"9a4c25d3-9786-492c-b084-85cb75c1ee3e"`
+	Name          string           `json:"name" example:"Chiki Ball"`
+	Slug          string           `json:"slug" example:"chiki-ball"`
+	Description   string           `json:"description" example:"Snack ringan untuk jualan harian"`
+	Stock         int64            `json:"stock" example:"100"`
+	Price         float64          `json:"price" example:"5000"`
+	Cost          float64          `json:"cost" example:"3000"`
+	Image         string           `json:"image" example:"https://example.com/chiki-ball.png"`
+	GalleryImages []string         `json:"gallery_images"`
+	Status        string           `json:"status" example:"published"`
+	PromoLabel    string           `json:"promo_label" example:"Best Seller"`
+	Category      categoryResponse `json:"category"`
+	CreatedAt     time.Time        `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt     time.Time        `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 }
 
 // newProductResponse is a helper function to create a response body for handling product data
 func newProductResponse(product *domain.Product) productResponse {
 	return productResponse{
-		ID:        product.ID,
-		SKU:       product.SKU.String(),
-		Name:      product.Name,
-		Stock:     product.Stock,
-		Price:     product.Price,
-		Cost:      product.Cost,
-		Image:     product.Image,
-		Category:  newCategoryResponse(product.Category),
-		CreatedAt: product.CreatedAt,
-		UpdatedAt: product.UpdatedAt,
+		ID:            product.ID,
+		SKU:           product.SKU.String(),
+		Name:          product.Name,
+		Slug:          product.Slug,
+		Description:   product.Description,
+		Stock:         product.Stock,
+		Price:         product.Price,
+		Cost:          product.Cost,
+		Image:         product.Image,
+		GalleryImages: product.GalleryImages,
+		Status:        product.Status,
+		PromoLabel:    product.PromoLabel,
+		Category:      newCategoryResponse(product.Category),
+		CreatedAt:     product.CreatedAt,
+		UpdatedAt:     product.UpdatedAt,
+	}
+}
+
+// settingResponse represents a setting response body.
+type settingResponse struct {
+	ID             uint64    `json:"id" example:"1"`
+	StoreName      string    `json:"store_name" example:"GEZY Commerce"`
+	StoreAddress   string    `json:"store_address" example:"Jl. Merdeka No. 45, Bandung"`
+	StoreContact   string    `json:"store_contact" example:"+62 812 3344 2211"`
+	TaxName        string    `json:"tax_name" example:"PPN"`
+	TaxRate        float64   `json:"tax_rate" example:"11"`
+	ServiceFeeName string    `json:"service_fee_name" example:"Biaya Layanan"`
+	ServiceFeeRate float64   `json:"service_fee_rate" example:"2"`
+	CreatedAt      time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt      time.Time `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+}
+
+func newSettingResponse(setting *domain.Setting) settingResponse {
+	return settingResponse{
+		ID:             setting.ID,
+		StoreName:      setting.StoreName,
+		StoreAddress:   setting.StoreAddress,
+		StoreContact:   setting.StoreContact,
+		TaxName:        setting.TaxName,
+		TaxRate:        setting.TaxRate,
+		ServiceFeeName: setting.ServiceFeeName,
+		ServiceFeeRate: setting.ServiceFeeRate,
+		CreatedAt:      setting.CreatedAt,
+		UpdatedAt:      setting.UpdatedAt,
 	}
 }
 
 // orderResponse represents an order response body
 type orderResponse struct {
-	ID           uint64                 `json:"id" example:"1"`
-	UserID       uint64                 `json:"user_id" example:"1"`
-	User         *userResponse          `json:"user,omitempty"`
-	PaymentID    uint64                 `json:"payment_type_id" example:"1"`
-	CustomerID   *uint64                `json:"customer_id,omitempty" example:"1"`
-	CustomerName string                 `json:"customer_name" example:"John Doe"`
-	TotalPrice   float64                `json:"total_price" example:"100000"`
-	TotalPaid    float64                `json:"total_paid" example:"100000"`
-	TotalReturn  float64                `json:"total_return" example:"0"`
-	ReceiptCode  string                 `json:"receipt_id" example:"4979cf6e-d215-4ff8-9d0d-b3e99bcc7750"`
-	Products     []orderProductResponse `json:"products"`
-	PaymentType  paymentResponse        `json:"payment_type"`
-	CreatedAt    time.Time              `json:"created_at" example:"1970-01-01T00:00:00Z"`
-	UpdatedAt    time.Time              `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+	ID              uint64                 `json:"id" example:"1"`
+	UserID          uint64                 `json:"user_id" example:"1"`
+	User            *userResponse          `json:"user,omitempty"`
+	PaymentID       uint64                 `json:"payment_type_id" example:"1"`
+	CustomerID      *uint64                `json:"customer_id,omitempty" example:"1"`
+	CustomerName    string                 `json:"customer_name" example:"John Doe"`
+	CustomerPhone   string                 `json:"customer_phone" example:"0812-3344-2211"`
+	CustomerEmail   string                 `json:"customer_email" example:"john@example.com"`
+	ShippingAddress string                 `json:"shipping_address" example:"Jl. Merdeka No. 45, Bandung"`
+	CustomerNote    string                 `json:"customer_note" example:"Antar sore hari"`
+	TotalPrice      float64                `json:"total_price" example:"100000"`
+	TotalPaid       float64                `json:"total_paid" example:"100000"`
+	TotalReturn     float64                `json:"total_return" example:"0"`
+	Status          string                 `json:"status" example:"paid"`
+	Channel         string                 `json:"channel" example:"pos"`
+	ReceiptCode     string                 `json:"receipt_id" example:"4979cf6e-d215-4ff8-9d0d-b3e99bcc7750"`
+	Products        []orderProductResponse `json:"products"`
+	PaymentType     paymentResponse        `json:"payment_type"`
+	CreatedAt       time.Time              `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt       time.Time              `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 }
 
 // newOrderResponse is a helper function to create a response body for handling order data
@@ -167,20 +212,26 @@ func newOrderResponse(order *domain.Order) orderResponse {
 		user = &parsed
 	}
 	return orderResponse{
-		ID:           order.ID,
-		UserID:       order.UserID,
-		User:         user,
-		PaymentID:    order.PaymentID,
-		CustomerID:   order.CustomerID,
-		CustomerName: order.CustomerName,
-		TotalPrice:   order.TotalPrice,
-		TotalPaid:    order.TotalPaid,
-		TotalReturn:  order.TotalReturn,
-		ReceiptCode:  order.ReceiptCode.String(),
-		Products:     newOrderProductResponse(order.Products),
-		PaymentType:  newPaymentResponse(order.Payment),
-		CreatedAt:    order.CreatedAt,
-		UpdatedAt:    order.UpdatedAt,
+		ID:              order.ID,
+		UserID:          order.UserID,
+		User:            user,
+		PaymentID:       order.PaymentID,
+		CustomerID:      order.CustomerID,
+		CustomerName:    order.CustomerName,
+		CustomerPhone:   order.CustomerPhone,
+		CustomerEmail:   order.CustomerEmail,
+		ShippingAddress: order.ShippingAddress,
+		CustomerNote:    order.CustomerNote,
+		TotalPrice:      order.TotalPrice,
+		TotalPaid:       order.TotalPaid,
+		TotalReturn:     order.TotalReturn,
+		Status:          string(order.Status),
+		Channel:         string(order.Channel),
+		ReceiptCode:     order.ReceiptCode.String(),
+		Products:        newOrderProductResponse(order.Products),
+		PaymentType:     newPaymentResponse(order.Payment),
+		CreatedAt:       order.CreatedAt,
+		UpdatedAt:       order.UpdatedAt,
 	}
 }
 
@@ -237,6 +288,7 @@ var errorStatusMap = map[error]int{
 	domain.ErrInvalidToken:               http.StatusUnauthorized,
 	domain.ErrExpiredToken:               http.StatusUnauthorized,
 	domain.ErrForbidden:                  http.StatusForbidden,
+	domain.ErrFeatureDisabled:            http.StatusServiceUnavailable,
 	domain.ErrNoUpdatedData:              http.StatusBadRequest,
 	domain.ErrInsufficientStock:          http.StatusBadRequest,
 	domain.ErrInsufficientPayment:        http.StatusBadRequest,

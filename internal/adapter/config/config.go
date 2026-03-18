@@ -9,11 +9,12 @@ import (
 // Container contains environment variables for the application, database, cache, token, and http server
 type (
 	Container struct {
-		App   *App
-		Token *Token
-		Redis *Redis
-		DB    *DB
-		HTTP  *HTTP
+		App         *App
+		Token       *Token
+		Redis       *Redis
+		DB          *DB
+		HTTP        *HTTP
+		StoreGoogle *StoreGoogle
 	}
 	// App contains all the environment variables for the application
 	App struct {
@@ -45,6 +46,12 @@ type (
 		URL            string
 		Port           string
 		AllowedOrigins string
+	}
+	StoreGoogle struct {
+		ClientID         string
+		ClientSecret     string
+		RedirectURL      string
+		FrontendRedirect string
 	}
 )
 
@@ -88,11 +95,19 @@ func New() (*Container, error) {
 		AllowedOrigins: os.Getenv("HTTP_ALLOWED_ORIGINS"),
 	}
 
+	storeGoogle := &StoreGoogle{
+		ClientID:         os.Getenv("STORE_GOOGLE_CLIENT_ID"),
+		ClientSecret:     os.Getenv("STORE_GOOGLE_CLIENT_SECRET"),
+		RedirectURL:      os.Getenv("STORE_GOOGLE_REDIRECT_URL"),
+		FrontendRedirect: os.Getenv("STORE_GOOGLE_FRONTEND_REDIRECT"),
+	}
+
 	return &Container{
-		app,
-		token,
-		redis,
-		db,
-		http,
+		App:         app,
+		Token:       token,
+		Redis:       redis,
+		DB:          db,
+		HTTP:        http,
+		StoreGoogle: storeGoogle,
 	}, nil
 }

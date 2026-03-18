@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/bagashiz/go-pos/internal/core/domain"
 	"github.com/bagashiz/go-pos/internal/core/port"
@@ -64,6 +65,34 @@ func (cs *CustomerService) GetCustomer(ctx context.Context, id uint64) (*domain.
 	}
 
 	return customer, nil
+}
+
+// FindCustomer returns a customer by phone first, then email.
+func (cs *CustomerService) FindCustomer(ctx context.Context, phone, email string) (*domain.Customer, error) {
+	phone = strings.TrimSpace(phone)
+	email = strings.TrimSpace(email)
+
+	if phone != "" {
+		customer, err := cs.repo.GetCustomerByPhone(ctx, phone)
+		if err == nil {
+			return customer, nil
+		}
+		if err != domain.ErrDataNotFound {
+			return nil, domain.ErrInternal
+		}
+	}
+
+	if email != "" {
+		customer, err := cs.repo.GetCustomerByEmail(ctx, email)
+		if err == nil {
+			return customer, nil
+		}
+		if err != domain.ErrDataNotFound {
+			return nil, domain.ErrInternal
+		}
+	}
+
+	return nil, domain.ErrDataNotFound
 }
 
 // ListCustomers returns customers with pagination

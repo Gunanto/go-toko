@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -7,9 +8,11 @@ import {
   listOrders,
   listPayments,
   listProducts,
+  payOrder,
 } from "../lib/api";
 
 function Orders() {
+  const navigate = useNavigate();
   const { token, logout } = useAuth();
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
@@ -20,7 +23,8 @@ function Orders() {
   const [notice, setNotice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [payingOrderId, setPayingOrderId] = useState(null);
+  const [payDialog, setPayDialog] = useState(null);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(20);
   const [hasNext, setHasNext] = useState(false);
@@ -59,40 +63,64 @@ function Orders() {
       maximumFractionDigits: 0,
     }).format(amount);
 
-  const flash = (type, message) => {
-    setNotice({ type, message });
-    window.clearTimeout(flash.timeoutId);
-    flash.timeoutId = window.setTimeout(() => setNotice(null), 3500);
-  };
-
-  const loadOrders = async (pageIndex = page) => {
-    setLoading(true);
-    try {
-      const statusFilter = filters.status === "all" ? "" : filters.status;
-      const response = await listOrders({
-        token,
-        skip: pageIndex * pageSize,
-        limit: pageSize,
-        status: statusFilter,
-        dateFrom: filters.dateFrom,
-        dateTo: filters.dateTo,
-      });
-      const list = response?.data?.orders || [];
-      const total = response?.data?.meta?.total ?? list.length;
-      setOrders(list);
-      setTotalOrders(total);
-      setHasNext((pageIndex + 1) * pageSize < total);
-    } catch (error) {
-      if (error?.status === 401 || error?.status === 403) {
-        logout();
-      }
-      flash("error", error.message || "Gagal memuat pesanan.");
-    } finally {
-      setLoading(false);
+  const getChannelLabel = (channel) => {
+    switch (channel) {
+      case "storefront":
+        return "Storefront";
+      case "manual":
+        return "Manual";
+      case "pos":
+      default:
+        return "POS";
     }
   };
 
-  const loadMeta = async () => {
+  const flash = useCallback((type, message) => {
+    setNotice({ type, message });
+    window.clearTimeout(flash.timeoutId);
+    flash.timeoutId = window.setTimeout(() => setNotice(null), 3500);
+  }, []);
+
+  const loadOrders = useCallback(
+    async (pageIndex = page) => {
+      setLoading(true);
+      try {
+        const statusFilter = filters.status === "all" ? "" : filters.status;
+        const response = await listOrders({
+          token,
+          skip: pageIndex * pageSize,
+          limit: pageSize,
+          status: statusFilter,
+          dateFrom: filters.dateFrom,
+          dateTo: filters.dateTo,
+        });
+        const list = response?.data?.orders || [];
+        const total = response?.data?.meta?.total ?? list.length;
+        setOrders(list);
+        setTotalOrders(total);
+        setHasNext((pageIndex + 1) * pageSize < total);
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 403) {
+          logout();
+        }
+        flash("error", error.message || "Gagal memuat pesanan.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      page,
+      filters.status,
+      filters.dateFrom,
+      filters.dateTo,
+      pageSize,
+      token,
+      logout,
+      flash,
+    ],
+  );
+
+  const loadMeta = useCallback(async () => {
     setLoadingMeta(true);
     try {
       const [paymentsResponse, productsResponse, customersResponse] =
@@ -112,17 +140,25 @@ function Orders() {
     } finally {
       setLoadingMeta(false);
     }
-  };
+  }, [token, logout, flash]);
 
   useEffect(() => {
     if (!token) return;
     loadMeta();
-  }, [token]);
+  }, [token, loadMeta]);
 
   useEffect(() => {
     if (!token) return;
     loadOrders(page);
-  }, [token, page, filters.status, filters.dateFrom, filters.dateTo, pageSize]);
+  }, [
+    token,
+    page,
+    filters.status,
+    filters.dateFrom,
+    filters.dateTo,
+    pageSize,
+    loadOrders,
+  ]);
 
   const handleOpenModal = () => {
     setForm({ customerName: "", customerId: "", paymentId: "", totalPaid: "" });
@@ -168,6 +204,7 @@ function Orders() {
       customer_id: form.customerId ? Number(form.customerId) : undefined,
       customer_name: form.customerName.trim(),
       total_paid: Number(form.totalPaid || subtotal),
+      channel: "manual",
       products: filteredItems.map((item) => ({
         product_id: Number(item.productId),
         qty: Number(item.qty || 1),
@@ -194,6 +231,40 @@ function Orders() {
   const handlePageChange = (nextPage) => {
     if (nextPage < 0) return;
     setPage(nextPage);
+  };
+
+  const handleOpenPayDialog = (order) => {
+    setPayDialog({
+      id: order.id,
+      totalPrice: Number(order.total_price || 0),
+      totalPaid: String(Number(order.total_price || 0)),
+    });
+  };
+
+  const handlePayOrder = async () => {
+    if (!payDialog) return;
+    const totalPaid = Number(payDialog.totalPaid || 0);
+    if (Number.isNaN(totalPaid)) {
+      flash("error", "Nominal bayar tidak valid.");
+      return;
+    }
+
+    const orderId = payDialog.id;
+    setPayingOrderId(orderId);
+    try {
+      await payOrder(orderId, { total_paid: totalPaid }, { token });
+      flash("success", "Order berhasil ditandai lunas.");
+      setPayDialog(null);
+      await loadOrders(page);
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal mengubah status order.");
+    } finally {
+      setPayingOrderId(null);
+    }
   };
 
   return (
@@ -297,9 +368,8 @@ function Orders() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {orders.map((order) => {
-            const status =
-              order.total_paid >= order.total_price ? "Selesai" : "Menunggu";
-            const channel = order.payment_type?.name || "POS";
+            const status = order.status === "paid" ? "Selesai" : "Menunggu";
+            const channel = getChannelLabel(order.channel);
             return (
               <div
                 key={order.id}
@@ -316,6 +386,9 @@ function Orders() {
                 <p className="text-sm text-gray-500 dark:text-slate-400">
                   {formatCurrency(order.total_price)}
                 </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                  {order.payment_type?.name || "-"}
+                </p>
                 <div className="mt-3 flex items-center justify-between">
                   <span
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
@@ -326,12 +399,23 @@ function Orders() {
                   >
                     {status}
                   </span>
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    Detail
-                  </button>
+                  <div className="flex gap-2">
+                    {order.status === "pending" ? (
+                      <button
+                        onClick={() => handleOpenPayDialog(order)}
+                        disabled={payingOrderId === order.id}
+                        className="rounded-lg bg-cyan-600 px-3 py-1 text-xs font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {payingOrderId === order.id ? "Proses..." : "Bayar"}
+                      </button>
+                    ) : null}
+                    <button
+                      onClick={() => navigate(`/orders/${order.id}`)}
+                      className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      Detail
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -538,65 +622,53 @@ function Orders() {
         </div>
       )}
 
-      {selectedOrder && (
+      {payDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-soft-xl dark:bg-slate-950">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-soft-xl dark:bg-slate-950">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Detail Pesanan
+                Bayar Order
               </h3>
               <button
-                onClick={() => setSelectedOrder(null)}
+                onClick={() => setPayDialog(null)}
                 className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Tutup
               </button>
             </div>
-            <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-slate-300">
-              <p>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  Pelanggan:
-                </span>{" "}
-                {selectedOrder.customer_name}
-              </p>
-              <p>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  Pembayaran:
-                </span>{" "}
-                {selectedOrder.payment_type?.name || "-"}
-              </p>
-              <p>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  Total:
-                </span>{" "}
-                {formatCurrency(selectedOrder.total_price)}
-              </p>
-              <p>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  Dibayar:
-                </span>{" "}
-                {formatCurrency(selectedOrder.total_paid)}
-              </p>
-            </div>
-            <div className="mt-4 space-y-2">
-              {selectedOrder.products?.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-xl border border-gray-100 px-3 py-2 text-sm dark:border-slate-800"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {item.product?.name || `Produk #${item.product_id}`}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">
-                      Qty {item.qty}
-                    </p>
-                  </div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    {formatCurrency(item.total_final_price)}
-                  </p>
-                </div>
-              ))}
+
+            <div className="mt-4 space-y-4">
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                Total tagihan: {formatCurrency(payDialog.totalPrice)}
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                  Total Dibayar
+                </label>
+                <input
+                  type="number"
+                  min={payDialog.totalPrice}
+                  value={payDialog.totalPaid}
+                  onChange={(event) =>
+                    setPayDialog((prev) =>
+                      prev ? { ...prev, totalPaid: event.target.value } : prev,
+                    )
+                  }
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePayOrder}
+                disabled={payingOrderId === payDialog.id}
+                className="w-full rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-soft-xl hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {payingOrderId === payDialog.id
+                  ? "Memproses..."
+                  : "Konfirmasi Pembayaran"}
+              </button>
             </div>
           </div>
         </div>

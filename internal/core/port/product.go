@@ -14,8 +14,12 @@ type ProductRepository interface {
 	CreateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error)
 	// GetProductByID selects a product by id
 	GetProductByID(ctx context.Context, id uint64) (*domain.Product, error)
+	// GetPublishedProductBySlug selects a published product by slug
+	GetPublishedProductBySlug(ctx context.Context, slug string) (*domain.Product, error)
 	// ListProducts selects a list of products with pagination
 	ListProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
+	// ListPublishedProducts selects a published product list with pagination
+	ListPublishedProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
 	// UpdateProduct updates a product
 	UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error)
 	// DeleteProduct deletes a product
@@ -28,8 +32,12 @@ type ProductService interface {
 	CreateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error)
 	// GetProduct returns a product by id
 	GetProduct(ctx context.Context, id uint64) (*domain.Product, error)
+	// GetPublishedProductBySlug returns a published product by slug
+	GetPublishedProductBySlug(ctx context.Context, slug string) (*domain.Product, error)
 	// ListProducts returns a list of products with pagination
 	ListProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
+	// ListPublishedProducts returns a published product list with pagination
+	ListPublishedProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
 	// UpdateProduct updates a product
 	UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error)
 	// DeleteProduct deletes a product

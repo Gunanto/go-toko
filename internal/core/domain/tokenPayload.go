@@ -6,7 +6,9 @@ import (
 
 // TokenPayload is an entity that represents the payload of the token
 type TokenPayload struct {
-	ID     uuid.UUID
-	UserID uint64
-	Role   UserRole
+	ID         uuid.UUID
+	Subject    string
+	UserID     uint64
+	CustomerID uint64
+	Role       UserRole
 }

@@ -53,9 +53,10 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 	}
 
 	payload := &domain.TokenPayload{
-		ID:     id,
-		UserID: user.ID,
-		Role:   user.Role,
+		ID:      id,
+		Subject: "user",
+		UserID:  user.ID,
+		Role:    user.Role,
 	}
 
 	token := paseto.NewToken()
@@ -74,6 +75,34 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 	tokenStr := token.V4Encrypt(*pt.key, nil)
 
 	return tokenStr, nil
+}
+
+func (pt *PasetoToken) CreateCustomerToken(customer *domain.Customer) (string, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return "", domain.ErrTokenCreation
+	}
+
+	payload := &domain.TokenPayload{
+		ID:         id,
+		Subject:    "customer",
+		CustomerID: customer.ID,
+	}
+
+	token := paseto.NewToken()
+	err = token.Set("payload", payload)
+	if err != nil {
+		return "", domain.ErrTokenCreation
+	}
+
+	issuedAt := time.Now()
+	expiredAt := issuedAt.Add(pt.duration)
+
+	token.SetIssuedAt(issuedAt)
+	token.SetNotBefore(issuedAt)
+	token.SetExpiration(expiredAt)
+
+	return token.V4Encrypt(*pt.key, nil), nil
 }
 
 // VerifyToken verifies the paseto token

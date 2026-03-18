@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"regexp"
+	"strings"
 
 	"github.com/bagashiz/go-pos/internal/core/domain"
 	"github.com/bagashiz/go-pos/internal/core/port"
 	"github.com/bagashiz/go-pos/internal/core/util"
 )
+
+var slugSanitizer = regexp.MustCompile(`[^a-z0-9]+`)
 
 /**
  * ProductService implements port.ProductService and port.CategoryService
@@ -30,6 +34,8 @@ func NewProductService(productRepo port.ProductRepository, categoryRepo port.Cat
 
 // CreateProduct creates a new product
 func (ps *ProductService) CreateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error) {
+	prepareProductStorefrontFields(product, nil)
+
 	category, err := ps.categoryRepo.GetCategoryByID(ctx, product.CategoryID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -158,6 +164,51 @@ func (ps *ProductService) ListProducts(ctx context.Context, search string, categ
 	return products, nil
 }
 
+// ListPublishedProducts retrieves a published product list.
+func (ps *ProductService) ListPublishedProducts(ctx context.Context, search string, categoryID, skip, limit uint64) ([]domain.Product, error) {
+	products, err := ps.productRepo.ListPublishedProducts(ctx, search, categoryID, skip, limit)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	for i, product := range products {
+		category, err := ps.categoryRepo.GetCategoryByID(ctx, product.CategoryID)
+		if err != nil {
+			if err == domain.ErrDataNotFound {
+				return nil, err
+			}
+			return nil, domain.ErrInternal
+		}
+
+		products[i].Category = category
+	}
+
+	return products, nil
+}
+
+// GetPublishedProductBySlug retrieves a published product by slug.
+func (ps *ProductService) GetPublishedProductBySlug(ctx context.Context, slug string) (*domain.Product, error) {
+	product, err := ps.productRepo.GetPublishedProductBySlug(ctx, slug)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
+	}
+
+	category, err := ps.categoryRepo.GetCategoryByID(ctx, product.CategoryID)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
+	}
+
+	product.Category = category
+
+	return product, nil
+}
+
 // UpdateProduct updates a product
 func (ps *ProductService) UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error) {
 	existingProduct, err := ps.productRepo.GetProductByID(ctx, product.ID)
@@ -170,21 +221,36 @@ func (ps *ProductService) UpdateProduct(ctx context.Context, product *domain.Pro
 
 	emptyData := product.CategoryID == 0 &&
 		product.Name == "" &&
+		product.Slug == "" &&
+		product.Description == "" &&
 		product.Image == "" &&
+		len(product.GalleryImages) == 0 &&
 		product.Price == 0 &&
 		product.Cost == 0 &&
-		product.Stock == 0
+		product.Stock == 0 &&
+		product.Status == "" &&
+		product.PromoLabel == ""
+
+	galleryUnchanged := len(product.GalleryImages) == 0 && len(existingProduct.GalleryImages) == 0 ||
+		len(product.GalleryImages) > 0 && slicesEqual(existingProduct.GalleryImages, product.GalleryImages)
 
 	sameData := existingProduct.CategoryID == product.CategoryID &&
 		existingProduct.Name == product.Name &&
+		existingProduct.Slug == product.Slug &&
+		existingProduct.Description == product.Description &&
 		existingProduct.Image == product.Image &&
+		galleryUnchanged &&
 		existingProduct.Price == product.Price &&
 		existingProduct.Cost == product.Cost &&
-		existingProduct.Stock == product.Stock
+		existingProduct.Stock == product.Stock &&
+		existingProduct.Status == product.Status &&
+		existingProduct.PromoLabel == product.PromoLabel
 
 	if emptyData || sameData {
 		return nil, domain.ErrNoUpdatedData
 	}
+
+	prepareProductStorefrontFields(product, existingProduct)
 
 	if product.CategoryID == 0 {
 		product.CategoryID = existingProduct.CategoryID
@@ -200,7 +266,7 @@ func (ps *ProductService) UpdateProduct(ctx context.Context, product *domain.Pro
 
 	product.Category = category
 
-	_, err = ps.productRepo.UpdateProduct(ctx, product)
+	product, err = ps.productRepo.UpdateProduct(ctx, product)
 	if err != nil {
 		if err == domain.ErrConflictingData {
 			return nil, err
@@ -231,6 +297,47 @@ func (ps *ProductService) UpdateProduct(ctx context.Context, product *domain.Pro
 	}
 
 	return product, nil
+}
+
+func slicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func prepareProductStorefrontFields(product, existing *domain.Product) {
+	if product.Slug == "" {
+		switch {
+		case product.Name != "":
+			product.Slug = generateSlug(product.Name)
+		case existing != nil:
+			product.Slug = existing.Slug
+		}
+	}
+
+	if product.Status == "" {
+		if existing != nil && existing.Status != "" {
+			product.Status = existing.Status
+		} else {
+			product.Status = "draft"
+		}
+	}
+}
+
+func generateSlug(value string) string {
+	slug := strings.ToLower(strings.TrimSpace(value))
+	slug = slugSanitizer.ReplaceAllString(slug, "-")
+	slug = strings.Trim(slug, "-")
+	if slug == "" {
+		return "produk"
+	}
+	return slug
 }
 
 // DeleteProduct deletes a product

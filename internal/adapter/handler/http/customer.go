@@ -1,6 +1,7 @@
 package http
 
 import (
+	"strings"
 	"time"
 
 	"github.com/bagashiz/go-pos/internal/core/domain"
@@ -22,20 +23,22 @@ func NewCustomerHandler(svc port.CustomerService) *CustomerHandler {
 
 // createCustomerRequest represents a request body for creating a customer
 type createCustomerRequest struct {
-	Name  string `json:"name" binding:"required" example:"John Doe"`
-	Phone string `json:"phone" binding:"omitempty" example:"0812-3344-2211"`
-	Email string `json:"email" binding:"omitempty,email" example:"john@example.com"`
-	Tier  string `json:"tier" binding:"omitempty" example:"gold"`
-	Notes string `json:"notes" binding:"omitempty" example:"Langganan"`
+	Name    string `json:"name" binding:"required" example:"John Doe"`
+	Phone   string `json:"phone" binding:"omitempty" example:"0812-3344-2211"`
+	Email   string `json:"email" binding:"omitempty,email" example:"john@example.com"`
+	Address string `json:"address" binding:"omitempty" example:"Jl. Merdeka No. 45, Bandung"`
+	Tier    string `json:"tier" binding:"omitempty" example:"gold"`
+	Notes   string `json:"notes" binding:"omitempty" example:"Langganan"`
 }
 
 // updateCustomerRequest represents a request body for updating a customer
 type updateCustomerRequest struct {
-	Name  string `json:"name" binding:"omitempty,required" example:"John Doe"`
-	Phone string `json:"phone" binding:"omitempty" example:"0812-3344-2211"`
-	Email string `json:"email" binding:"omitempty,email" example:"john@example.com"`
-	Tier  string `json:"tier" binding:"omitempty" example:"gold"`
-	Notes string `json:"notes" binding:"omitempty" example:"Langganan"`
+	Name    string `json:"name" binding:"omitempty,required" example:"John Doe"`
+	Phone   string `json:"phone" binding:"omitempty" example:"0812-3344-2211"`
+	Email   string `json:"email" binding:"omitempty,email" example:"john@example.com"`
+	Address string `json:"address" binding:"omitempty" example:"Jl. Merdeka No. 45, Bandung"`
+	Tier    string `json:"tier" binding:"omitempty" example:"gold"`
+	Notes   string `json:"notes" binding:"omitempty" example:"Langganan"`
 }
 
 // getCustomerRequest represents a request params for retrieving a customer
@@ -54,28 +57,74 @@ type listCustomersRequest struct {
 	Limit uint64 `form:"limit" binding:"omitempty,min=5" example:"10"`
 }
 
+type findCustomerRequest struct {
+	Phone string `form:"phone" binding:"omitempty" example:"0812-3344-2211"`
+	Email string `form:"email" binding:"omitempty,email" example:"john@example.com"`
+}
+
 type customerResponse struct {
-	ID        uint64 `json:"id" example:"1"`
-	Name      string `json:"name" example:"John Doe"`
-	Phone     string `json:"phone" example:"0812-3344-2211"`
-	Email     string `json:"email" example:"john@example.com"`
-	Tier      string `json:"tier" example:"gold"`
-	Notes     string `json:"notes" example:"Langganan"`
-	CreatedAt string `json:"created_at" example:"1970-01-01T00:00:00Z"`
-	UpdatedAt string `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+	ID           uint64 `json:"id" example:"1"`
+	Name         string `json:"name" example:"John Doe"`
+	Phone        string `json:"phone" example:"0812-3344-2211"`
+	Email        string `json:"email" example:"john@example.com"`
+	Address      string `json:"address" example:"Jl. Merdeka No. 45, Bandung"`
+	Tier         string `json:"tier" example:"gold"`
+	Notes        string `json:"notes" example:"Langganan"`
+	AvatarURL    string `json:"avatar_url" example:"https://lh3.googleusercontent.com/a/example"`
+	AuthProvider string `json:"auth_provider" example:"password"`
+	CreatedAt    string `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt    string `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 }
 
 func newCustomerResponse(customer *domain.Customer) customerResponse {
 	return customerResponse{
-		ID:        customer.ID,
-		Name:      customer.Name,
-		Phone:     customer.Phone,
-		Email:     customer.Email,
-		Tier:      customer.Tier,
-		Notes:     customer.Notes,
-		CreatedAt: customer.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: customer.UpdatedAt.Format(time.RFC3339),
+		ID:           customer.ID,
+		Name:         customer.Name,
+		Phone:        customer.Phone,
+		Email:        customer.Email,
+		Address:      customer.Address,
+		Tier:         customer.Tier,
+		Notes:        customer.Notes,
+		AvatarURL:    customer.AvatarURL,
+		AuthProvider: customer.AuthProvider,
+		CreatedAt:    customer.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    customer.UpdatedAt.Format(time.RFC3339),
 	}
+}
+
+// FindCustomer godoc
+//
+//	@Summary		Find a customer
+//	@Description	Find a customer by phone or email for storefront checkout
+//	@Tags			Storefront
+//	@Accept			json
+//	@Produce		json
+//	@Param			phone	query		string			false	"Customer phone"
+//	@Param			email	query		string			false	"Customer email"
+//	@Success		200		{object}	customerResponse	"Customer found"
+//	@Failure		400		{object}	errorResponse	"Validation error"
+//	@Failure		404		{object}	errorResponse	"Data not found error"
+//	@Failure		500		{object}	errorResponse	"Internal server error"
+//	@Router			/store/customers/lookup [get]
+func (ch *CustomerHandler) FindCustomer(ctx *gin.Context) {
+	var req findCustomerRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		validationError(ctx, err)
+		return
+	}
+
+	if strings.TrimSpace(req.Phone) == "" && strings.TrimSpace(req.Email) == "" {
+		validationError(ctx, domain.ErrNoUpdatedData)
+		return
+	}
+
+	customer, err := ch.svc.FindCustomer(ctx, req.Phone, req.Email)
+	if err != nil {
+		handleError(ctx, err)
+		return
+	}
+
+	handleSuccess(ctx, newCustomerResponse(customer))
 }
 
 // CreateCustomer godoc
@@ -102,11 +151,12 @@ func (ch *CustomerHandler) CreateCustomer(ctx *gin.Context) {
 	}
 
 	customer := domain.Customer{
-		Name:  req.Name,
-		Phone: req.Phone,
-		Email: req.Email,
-		Tier:  req.Tier,
-		Notes: req.Notes,
+		Name:    req.Name,
+		Phone:   req.Phone,
+		Email:   req.Email,
+		Address: req.Address,
+		Tier:    req.Tier,
+		Notes:   req.Notes,
 	}
 
 	if customer.Tier == "" {
@@ -229,12 +279,13 @@ func (ch *CustomerHandler) UpdateCustomer(ctx *gin.Context) {
 	}
 
 	customer := domain.Customer{
-		ID:    id,
-		Name:  req.Name,
-		Phone: req.Phone,
-		Email: req.Email,
-		Tier:  req.Tier,
-		Notes: req.Notes,
+		ID:      id,
+		Name:    req.Name,
+		Phone:   req.Phone,
+		Email:   req.Email,
+		Address: req.Address,
+		Tier:    req.Tier,
+		Notes:   req.Notes,
 	}
 
 	updated, err := ch.svc.UpdateCustomer(ctx, &customer)

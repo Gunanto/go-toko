@@ -14,7 +14,8 @@ const (
 	// authorizationType is the accepted authorization type
 	authorizationType = "bearer"
 	// authorizationPayloadKey is the key for authorization payload in the context
-	authorizationPayloadKey = "authorization_payload"
+	authorizationPayloadKey         = "authorization_payload"
+	customerAuthorizationPayloadKey = "customer_authorization_payload"
 )
 
 // authMiddleware is a middleware to check if the user is authenticated
@@ -50,8 +51,46 @@ func authMiddleware(token port.TokenService) gin.HandlerFunc {
 			handleAbort(ctx, err)
 			return
 		}
+		if payload.Subject != "user" {
+			handleAbort(ctx, domain.ErrUnauthorized)
+			return
+		}
 
 		ctx.Set(authorizationPayloadKey, payload)
+		ctx.Next()
+	}
+}
+
+func customerAuthMiddleware(token port.TokenService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
+		if len(authorizationHeader) == 0 {
+			handleAbort(ctx, domain.ErrEmptyAuthorizationHeader)
+			return
+		}
+
+		fields := strings.Fields(authorizationHeader)
+		if len(fields) != 2 {
+			handleAbort(ctx, domain.ErrInvalidAuthorizationHeader)
+			return
+		}
+
+		if strings.ToLower(fields[0]) != authorizationType {
+			handleAbort(ctx, domain.ErrInvalidAuthorizationType)
+			return
+		}
+
+		payload, err := token.VerifyToken(fields[1])
+		if err != nil {
+			handleAbort(ctx, err)
+			return
+		}
+		if payload.Subject != "customer" || payload.CustomerID == 0 {
+			handleAbort(ctx, domain.ErrUnauthorized)
+			return
+		}
+
+		ctx.Set(customerAuthorizationPayloadKey, payload)
 		ctx.Next()
 	}
 }

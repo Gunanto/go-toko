@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import logoGezyCommerce from "../assets/logo-gezy-commerce-transparent.png";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
@@ -30,26 +31,11 @@ function Topbar({ onMenuClick }) {
                 />
               </svg>
             </button>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-600 text-white shadow-soft-xl">
-                <svg
-                  className="h-5 w-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                >
-                  <path d="M2 5a2 2 0 012-2h3.5a1 1 0 01.8.4l1.5 2a1 1 0 00.8.4H16a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V5z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Go Toko
-                </p>
-                <p className="text-xs text-gray-500 dark:text-slate-400">
-                  POS & Inventory
-                </p>
-              </div>
-            </div>
+            <img
+              src={logoGezyCommerce}
+              alt="GEZY Commerce"
+              className="h-auto max-h-12 w-auto max-w-[220px] object-contain"
+            />
           </div>
 
           <div className="flex-1 px-4 lg:px-8">

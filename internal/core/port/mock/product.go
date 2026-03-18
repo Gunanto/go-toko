@@ -84,6 +84,21 @@ func (mr *MockProductRepositoryMockRecorder) GetProductByID(ctx, id any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductByID", reflect.TypeOf((*MockProductRepository)(nil).GetProductByID), ctx, id)
 }
 
+// GetPublishedProductBySlug mocks base method.
+func (m *MockProductRepository) GetPublishedProductBySlug(ctx context.Context, slug string) (*domain.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPublishedProductBySlug", ctx, slug)
+	ret0, _ := ret[0].(*domain.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPublishedProductBySlug indicates an expected call of GetPublishedProductBySlug.
+func (mr *MockProductRepositoryMockRecorder) GetPublishedProductBySlug(ctx, slug any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublishedProductBySlug", reflect.TypeOf((*MockProductRepository)(nil).GetPublishedProductBySlug), ctx, slug)
+}
+
 // ListProducts mocks base method.
 func (m *MockProductRepository) ListProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error) {
 	m.ctrl.T.Helper()
@@ -97,6 +112,21 @@ func (m *MockProductRepository) ListProducts(ctx context.Context, search string,
 func (mr *MockProductRepositoryMockRecorder) ListProducts(ctx, search, categoryId, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProducts", reflect.TypeOf((*MockProductRepository)(nil).ListProducts), ctx, search, categoryId, skip, limit)
+}
+
+// ListPublishedProducts mocks base method.
+func (m *MockProductRepository) ListPublishedProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListPublishedProducts", ctx, search, categoryId, skip, limit)
+	ret0, _ := ret[0].([]domain.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPublishedProducts indicates an expected call of ListPublishedProducts.
+func (mr *MockProductRepositoryMockRecorder) ListPublishedProducts(ctx, search, categoryId, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPublishedProducts", reflect.TypeOf((*MockProductRepository)(nil).ListPublishedProducts), ctx, search, categoryId, skip, limit)
 }
 
 // UpdateProduct mocks base method.
@@ -181,6 +211,21 @@ func (mr *MockProductServiceMockRecorder) GetProduct(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProduct", reflect.TypeOf((*MockProductService)(nil).GetProduct), ctx, id)
 }
 
+// GetPublishedProductBySlug mocks base method.
+func (m *MockProductService) GetPublishedProductBySlug(ctx context.Context, slug string) (*domain.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPublishedProductBySlug", ctx, slug)
+	ret0, _ := ret[0].(*domain.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPublishedProductBySlug indicates an expected call of GetPublishedProductBySlug.
+func (mr *MockProductServiceMockRecorder) GetPublishedProductBySlug(ctx, slug any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublishedProductBySlug", reflect.TypeOf((*MockProductService)(nil).GetPublishedProductBySlug), ctx, slug)
+}
+
 // ListProducts mocks base method.
 func (m *MockProductService) ListProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error) {
 	m.ctrl.T.Helper()
@@ -194,6 +239,21 @@ func (m *MockProductService) ListProducts(ctx context.Context, search string, ca
 func (mr *MockProductServiceMockRecorder) ListProducts(ctx, search, categoryId, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProducts", reflect.TypeOf((*MockProductService)(nil).ListProducts), ctx, search, categoryId, skip, limit)
+}
+
+// ListPublishedProducts mocks base method.
+func (m *MockProductService) ListPublishedProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListPublishedProducts", ctx, search, categoryId, skip, limit)
+	ret0, _ := ret[0].([]domain.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPublishedProducts indicates an expected call of ListPublishedProducts.
+func (mr *MockProductServiceMockRecorder) ListPublishedProducts(ctx, search, categoryId, skip, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPublishedProducts", reflect.TypeOf((*MockProductService)(nil).ListPublishedProducts), ctx, search, categoryId, skip, limit)
 }
 
 // UpdateProduct mocks base method.

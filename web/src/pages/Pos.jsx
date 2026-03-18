@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -99,16 +99,24 @@ function Pos() {
       maximumFractionDigits: 0,
     }).format(amount);
 
-  const flash = (type, message) => {
+  const flash = useCallback((type, message) => {
     setNotice({ type, message });
     window.clearTimeout(flash.timeoutId);
     flash.timeoutId = window.setTimeout(() => setNotice(null), 3500);
-  };
+  }, []);
 
   const handleAddToCart = (product) => {
+    if (product.stock <= 0) {
+      flash("error", "Stok habis.");
+      return;
+    }
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
+        if (existing.qty + 1 > product.stock) {
+          flash("error", "Stok tidak mencukupi.");
+          return prev;
+        }
         return prev.map((item) =>
           item.id === product.id ? { ...item, qty: item.qty + 1 } : item,
         );
@@ -123,11 +131,17 @@ function Pos() {
   const handleUpdateQty = (id, delta) => {
     setCartItems((prev) =>
       prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, qty: Math.max(0, item.qty + delta) }
-            : item,
-        )
+        .map((item) => {
+          if (item.id !== id) return item;
+          if (delta > 0) {
+            const product = products.find((p) => p.id === id);
+            if (product && item.qty + delta > product.stock) {
+              flash("error", "Stok tidak mencukupi.");
+              return item;
+            }
+          }
+          return { ...item, qty: Math.max(0, item.qty + delta) };
+        })
         .filter((item) => item.qty > 0),
     );
   };
@@ -173,6 +187,29 @@ function Pos() {
     flash("info", "Draft dihapus.");
   };
 
+  const loadProducts = useCallback(
+    async (shouldUpdate = () => true) => {
+      setLoadingProducts(true);
+      try {
+        const response = await listProducts({ token, skip: 0, limit: 200 });
+        const list = response?.data?.products || [];
+        if (shouldUpdate()) {
+          setProducts(list.map(normalizeProduct));
+        }
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 403) {
+          logout();
+        }
+        flash("error", error.message || "Gagal memuat produk.");
+      } finally {
+        if (shouldUpdate()) {
+          setLoadingProducts(false);
+        }
+      }
+    },
+    [token, logout, flash],
+  );
+
   const handleCheckout = async () => {
     if (!shift) {
       flash("error", "Buka shift terlebih dulu.");
@@ -195,13 +232,54 @@ function Pos() {
       customer_id: customerId ? Number(customerId) : undefined,
       customer_name: customerName.trim() || "Pelanggan Umum",
       total_paid: Math.round(paidAmount || 0),
+      channel: "pos",
       products: cartItems.map((item) => ({
         product_id: item.id,
         qty: item.qty,
       })),
     };
     try {
-      await createOrder(payload, { token });
+      const response = await createOrder(payload, { token });
+      const updatedProducts = response?.data?.products || [];
+      if (updatedProducts.length > 0) {
+        const stockById = new Map(
+          updatedProducts
+            .filter((item) => item?.product?.id != null)
+            .map((item) => [item.product.id, item.product.stock]),
+        );
+        const deltaById = new Map(cartItems.map((item) => [item.id, item.qty]));
+        setProducts((prev) =>
+          prev.map((product) => {
+            if (!stockById.has(product.id)) return product;
+            const delta = deltaById.get(product.id) || 0;
+            const responseStock = Number(
+              stockById.get(product.id) ?? product.stock,
+            );
+            return {
+              ...product,
+              stock: Math.min(
+                product.stock - delta,
+                Number.isNaN(responseStock) ? product.stock : responseStock,
+              ),
+            };
+          }),
+        );
+      } else {
+        setProducts((prev) => {
+          const deltaById = new Map(
+            cartItems.map((item) => [item.id, item.qty]),
+          );
+          return prev.map((product) => {
+            const delta = deltaById.get(product.id) || 0;
+            if (delta === 0) return product;
+            return {
+              ...product,
+              stock: Math.max(0, product.stock - delta),
+            };
+          });
+        });
+        await loadProducts();
+      }
       setCartItems([]);
       setDraft(null);
       setCashPaid("");
@@ -226,28 +304,15 @@ function Pos() {
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
-    const loadProducts = async () => {
-      setLoadingProducts(true);
-      try {
-        const response = await listProducts({ token, skip: 0, limit: 200 });
-        const list = response?.data?.products || [];
-        if (!isMounted) return;
-        setProducts(list.map(normalizeProduct));
-      } catch (error) {
-        if (!isMounted) return;
-        if (error?.status === 401 || error?.status === 403) {
-          logout();
-        }
-        flash("error", error.message || "Gagal memuat produk.");
-      } finally {
-        if (isMounted) setLoadingProducts(false);
-      }
+    const run = async () => {
+      if (!isMounted) return;
+      await loadProducts(() => isMounted);
     };
-    loadProducts();
+    run();
     return () => {
       isMounted = false;
     };
-  }, [token, logout]);
+  }, [token, loadProducts]);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -307,7 +372,7 @@ function Pos() {
     return () => {
       isMounted = false;
     };
-  }, [token, logout]);
+  }, [token, logout, paymentId, flash]);
 
   return (
     <>
@@ -402,7 +467,12 @@ function Pos() {
                   <button
                     key={product.id}
                     onClick={() => handleAddToCart(product)}
-                    className="group rounded-2xl border border-gray-100 bg-gray-50 p-4 text-left hover:border-cyan-200 hover:bg-cyan-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-cyan-700 dark:hover:bg-cyan-500/10"
+                    disabled={product.stock <= 0}
+                    className={`group rounded-2xl border border-gray-100 p-4 text-left dark:border-slate-800 ${
+                      product.stock <= 0
+                        ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-slate-900/60"
+                        : "bg-gray-50 hover:border-cyan-200 hover:bg-cyan-50 dark:bg-slate-900 dark:hover:border-cyan-700 dark:hover:bg-cyan-500/10"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">

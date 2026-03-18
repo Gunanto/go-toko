@@ -94,6 +94,7 @@ AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {

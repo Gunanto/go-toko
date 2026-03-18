@@ -1,11 +1,12 @@
 import PropTypes from "prop-types";
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import logoGezy from "../assets/logo-gezy-transparent.png";
 import { listOrders } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 const navItems = [
-  { label: "Dashboard", to: "/", icon: "chart" },
+  { label: "Dashboard", to: "/dashboard", icon: "chart" },
   { label: "Kasir (POS)", to: "/pos", icon: "cash" },
   { label: "Produk", to: "/products", icon: "bag" },
   { label: "Pesanan", to: "/orders", icon: "receipt" },
@@ -189,33 +190,43 @@ function Sidebar({ open, onClose }) {
         }`}
       >
         <div className="flex h-full flex-col justify-between px-4 pb-6">
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200"
-                      : "text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-900"
-                  }`
-                }
-                onClick={onClose}
-              >
-                <svg
-                  className="h-5 w-5 text-gray-500 dark:text-slate-400"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
+          <div className="space-y-5">
+            <div className="flex justify-center rounded-2xl border border-gray-100 bg-gray-50 px-3 py-4 dark:border-slate-800 dark:bg-slate-900">
+              <img
+                src={logoGezy}
+                alt="GEZY"
+                className="h-auto max-h-16 w-full max-w-[180px] object-contain"
+              />
+            </div>
+
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === "/"}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                      isActive
+                        ? "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-200"
+                        : "text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-900"
+                    }`
+                  }
+                  onClick={onClose}
                 >
-                  {iconMap[item.icon]}
-                </svg>
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+                  <svg
+                    className="h-5 w-5 text-gray-500 dark:text-slate-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    {iconMap[item.icon]}
+                  </svg>
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
 
           <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 p-4 text-white shadow-soft-xl dark:border-slate-800">
             <p className="text-xs uppercase tracking-wide text-cyan-200">
