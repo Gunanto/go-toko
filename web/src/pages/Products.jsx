@@ -88,6 +88,7 @@ function Products() {
     sku: "",
     stock: "",
     price: "",
+    cost: "",
     category: "",
     image: "",
   });
@@ -110,6 +111,7 @@ function Products() {
       sku: "",
       stock: "",
       price: "",
+      cost: "",
       category: "",
       image: "",
     });
@@ -177,6 +179,9 @@ function Products() {
         if (sort.field === "price") {
           return (a.price - b.price) * dir;
         }
+        if (sort.field === "cost") {
+          return (a.cost - b.cost) * dir;
+        }
         if (sort.field === "stock") {
           return (a.stock - b.stock) * dir;
         }
@@ -209,6 +214,7 @@ function Products() {
       sku: product.sku || `SKU-${product.id}`,
       stock: product.stock ?? 0,
       price: product.price ?? 0,
+      cost: product.cost ?? 0,
       category: product.category?.name || "Umum",
       image: product.image || placeholderImage,
     };
@@ -250,6 +256,7 @@ function Products() {
       flash("error", "Harga produk wajib diisi.");
       return;
     }
+    const cost = Number(form.cost.toString().replace(/[^\d]/g, ""));
     const stock = Number(form.stock);
     const category = form.category.trim() || "Umum";
     const image = form.image.trim() || placeholderImage;
@@ -269,6 +276,7 @@ function Products() {
             name: form.name.trim(),
             image,
             price,
+            cost: Number.isNaN(cost) ? 0 : cost,
             stock: Number.isNaN(stock) ? 0 : stock,
           },
           { token },
@@ -289,6 +297,7 @@ function Products() {
             name: form.name.trim(),
             image,
             price,
+            cost: Number.isNaN(cost) ? 0 : cost,
             stock: Number.isNaN(stock) ? 0 : stock,
           },
           { token },
@@ -322,6 +331,7 @@ function Products() {
       sku: product.sku,
       stock: product.stock.toString(),
       price: product.price.toString(),
+      cost: product.cost?.toString() || "",
       category: product.category,
       image: product.image || "",
     });
@@ -389,6 +399,17 @@ function Products() {
           const price = Number(
             (row.price || row.harga || 0).toString().replace(/[^\d]/g, ""),
           );
+          const cost = Number(
+            (
+              row.cost ||
+              row.hpp ||
+              row["harga pokok"] ||
+              row["harga_pokok"] ||
+              0
+            )
+              .toString()
+              .replace(/[^\d]/g, ""),
+          );
           const category = row.category || row.kategori || "Umum";
           const image =
             row.image ||
@@ -401,6 +422,7 @@ function Products() {
             sku: String(sku).trim(),
             stock: Number.isNaN(stock) ? 0 : stock,
             price: Number.isNaN(price) ? 0 : price,
+            cost: Number.isNaN(cost) ? 0 : cost,
             category: String(category).trim() || "Umum",
             image: String(image).trim() || placeholderImage,
           };
@@ -424,6 +446,7 @@ function Products() {
           name: row.name,
           image: row.image || placeholderImage,
           price: row.price,
+          cost: row.cost,
           stock: row.stock,
         });
       }
@@ -642,7 +665,7 @@ function Products() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Harga
+                    Harga Jual
                   </label>
                   <input
                     name="price"
@@ -653,6 +676,18 @@ function Products() {
                     required
                   />
                 </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                  Harga Pokok
+                </label>
+                <input
+                  name="cost"
+                  value={form.cost}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  placeholder="50000"
+                />
               </div>
               <button
                 type="submit"
@@ -769,7 +804,8 @@ function Products() {
                 <div className="space-y-2">
                   {[
                     { label: "Nama", field: "name" },
-                    { label: "Harga", field: "price" },
+                    { label: "Harga Jual", field: "price" },
+                    { label: "Harga Pokok", field: "cost" },
                     { label: "Stok", field: "stock" },
                   ].map((option) => (
                     <button
@@ -802,7 +838,8 @@ function Products() {
                 <th className="py-3">Produk</th>
                 <th>SKU</th>
                 <th>Stok</th>
-                <th>Harga</th>
+                <th>Harga Jual</th>
+                <th>Harga Pokok</th>
                 <th className="text-right">Aksi</th>
               </tr>
             </thead>
@@ -810,7 +847,7 @@ function Products() {
               {loading && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="py-6 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     Memuat produk...
@@ -836,6 +873,7 @@ function Products() {
                   <td>{product.sku}</td>
                   <td>{product.stock} unit</td>
                   <td>{formatCurrency(product.price)}</td>
+                  <td>{formatCurrency(product.cost)}</td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -857,7 +895,7 @@ function Products() {
               {!loading && filteredProducts.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="py-6 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     Produk tidak ditemukan.

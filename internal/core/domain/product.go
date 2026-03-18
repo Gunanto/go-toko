@@ -14,6 +14,7 @@ type Product struct {
 	Name       string
 	Stock      int64
 	Price      float64
+	Cost       float64
 	Image      string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time

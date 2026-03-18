@@ -140,9 +140,9 @@ func (or *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order)
 
 		for _, orderProduct := range order.Products {
 			orderProductQuery := or.db.QueryBuilder.Insert("order_products").
-				Columns("order_id", "product_id", "quantity", "total_price").
-				Values(order.ID, orderProduct.ProductID, orderProduct.Quantity, orderProduct.TotalPrice).
-				Suffix("RETURNING *")
+				Columns("order_id", "product_id", "quantity", "total_price", "cost_at_sale").
+				Values(order.ID, orderProduct.ProductID, orderProduct.Quantity, orderProduct.TotalPrice, orderProduct.CostAtSale).
+				Suffix("RETURNING id, order_id, product_id, quantity, total_price, cost_at_sale, created_at, updated_at")
 
 			sql, args, err := orderProductQuery.ToSql()
 			if err != nil {
@@ -155,6 +155,7 @@ func (or *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order)
 				&orderProduct.ProductID,
 				&orderProduct.Quantity,
 				&orderProduct.TotalPrice,
+				&orderProduct.CostAtSale,
 				&orderProduct.CreatedAt,
 				&orderProduct.UpdatedAt,
 			)
@@ -221,7 +222,16 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 		Where(sq.Eq{"id": id}).
 		Limit(1)
 
-	orderProductQuery := or.db.QueryBuilder.Select("*").
+	orderProductQuery := or.db.QueryBuilder.Select(
+		"id",
+		"order_id",
+		"product_id",
+		"quantity",
+		"total_price",
+		"cost_at_sale",
+		"created_at",
+		"updated_at",
+	).
 		From("order_products").
 		Where(sq.Eq{"order_id": id})
 
@@ -271,6 +281,7 @@ func (or *OrderRepository) GetOrderByID(ctx context.Context, id uint64) (*domain
 				&orderProduct.ProductID,
 				&orderProduct.Quantity,
 				&orderProduct.TotalPrice,
+				&orderProduct.CostAtSale,
 				&orderProduct.CreatedAt,
 				&orderProduct.UpdatedAt,
 			)
@@ -403,7 +414,16 @@ func (or *OrderRepository) ListOrders(ctx context.Context, filter port.OrderList
 		}
 
 		for i, order := range orders {
-			orderProductQuery := or.db.QueryBuilder.Select("*").
+			orderProductQuery := or.db.QueryBuilder.Select(
+				"id",
+				"order_id",
+				"product_id",
+				"quantity",
+				"total_price",
+				"cost_at_sale",
+				"created_at",
+				"updated_at",
+			).
 				From("order_products").
 				Where(sq.Eq{"order_id": order.ID})
 
@@ -426,6 +446,7 @@ func (or *OrderRepository) ListOrders(ctx context.Context, filter port.OrderList
 						&orderProduct.ProductID,
 						&orderProduct.Quantity,
 						&orderProduct.TotalPrice,
+						&orderProduct.CostAtSale,
 						&orderProduct.CreatedAt,
 						&orderProduct.UpdatedAt,
 					)

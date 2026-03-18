@@ -523,6 +523,25 @@ function Reports() {
                         );
                       })}
                     </tbody>
+                    <tfoot className="bg-gray-50 text-sm dark:bg-slate-900">
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-200"
+                        >
+                          Total Uang Masuk
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(
+                            dailyOrders.reduce(
+                              (sum, order) =>
+                                sum + Number(order.total_paid || 0),
+                              0,
+                            ),
+                          )}
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               )}

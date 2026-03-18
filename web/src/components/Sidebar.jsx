@@ -1,5 +1,8 @@
 import PropTypes from "prop-types";
-import { NavLink } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { listOrders } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   { label: "Dashboard", to: "/", icon: "chart" },
@@ -65,6 +68,119 @@ const iconMap = {
 };
 
 function Sidebar({ open, onClose }) {
+  const navigate = useNavigate();
+  const { token, logout } = useAuth();
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState("");
+  const [marginPct, setMarginPct] = useState(0);
+  const [topProduct, setTopProduct] = useState("");
+
+  const todayString = useMemo(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
+
+  const buildLocalDateRange = (dateValue) => {
+    if (!dateValue) return { from: "", to: "" };
+    const start = new Date(`${dateValue}T00:00:00`);
+    const end = new Date(`${dateValue}T23:59:59`);
+    const toOffset = (date) => {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mi = String(date.getMinutes()).padStart(2, "0");
+      const ss = String(date.getSeconds()).padStart(2, "0");
+      const offsetMinutes = -date.getTimezoneOffset();
+      const sign = offsetMinutes >= 0 ? "+" : "-";
+      const absOffset = Math.abs(offsetMinutes);
+      const offsetH = String(Math.floor(absOffset / 60)).padStart(2, "0");
+      const offsetM = String(absOffset % 60).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}${sign}${offsetH}:${offsetM}`;
+    };
+    return { from: toOffset(start), to: toOffset(end) };
+  };
+
+  useEffect(() => {
+    if (!token) {
+      setMarginPct(0);
+      setTopProduct("");
+      return;
+    }
+    let isMounted = true;
+    const loadInsight = async () => {
+      setInsightLoading(true);
+      setInsightError("");
+      try {
+        const range = buildLocalDateRange(todayString);
+        const response = await listOrders({
+          token,
+          skip: 0,
+          limit: 200,
+          dateFrom: range.from,
+          dateTo: range.to,
+        });
+        if (!isMounted) return;
+        const orders = response?.data?.orders || [];
+        const totals = orders.reduce(
+          (acc, order) => {
+            acc.paid += Number(order.total_paid || 0);
+            (order.products || []).forEach((item) => {
+              const qty = Number(item.qty || 0);
+              const cost = Number(item.cost_at_sale || 0);
+              acc.cost += cost * qty;
+            });
+            return acc;
+          },
+          { paid: 0, cost: 0 },
+        );
+        const pct =
+          totals.paid > 0
+            ? ((totals.paid - totals.cost) / totals.paid) * 100
+            : 0;
+        setMarginPct(Number.isFinite(pct) ? pct : 0);
+
+        const productTotals = new Map();
+        orders.forEach((order) => {
+          (order.products || []).forEach((item) => {
+            const name =
+              item.product?.name || `Produk #${item.product_id || "-"}`;
+            const qty = Number(item.qty || 0);
+            if (!productTotals.has(name)) {
+              productTotals.set(name, 0);
+            }
+            productTotals.set(name, productTotals.get(name) + qty);
+          });
+        });
+        let bestName = "";
+        let bestQty = 0;
+        for (const [name, qty] of productTotals.entries()) {
+          if (qty > bestQty) {
+            bestQty = qty;
+            bestName = name;
+          }
+        }
+        setTopProduct(bestName);
+      } catch (error) {
+        if (!isMounted) return;
+        if (error?.status === 401 || error?.status === 403) {
+          logout();
+          return;
+        }
+        setInsightError(error.message || "Gagal memuat insight harian.");
+      } finally {
+        if (isMounted) setInsightLoading(false);
+      }
+    };
+    loadInsight();
+    return () => {
+      isMounted = false;
+    };
+  }, [token, todayString, logout]);
+
   return (
     <>
       <aside
@@ -105,13 +221,26 @@ function Sidebar({ open, onClose }) {
             <p className="text-xs uppercase tracking-wide text-cyan-200">
               Insight Harian
             </p>
-            <p className="mt-2 text-lg font-semibold">Margin bersih 18.4%</p>
-            <p className="text-xs text-gray-200">
-              Produk terlaris: Kopi Susu 1L
-            </p>
+            {insightLoading ? (
+              <p className="mt-2 text-sm text-gray-200">
+                Memuat insight harian...
+              </p>
+            ) : insightError ? (
+              <p className="mt-2 text-sm text-rose-200">{insightError}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-lg font-semibold">
+                  Margin bersih {marginPct.toFixed(1)}%
+                </p>
+                <p className="text-xs text-gray-200">
+                  Produk terlaris: {topProduct || "Belum ada transaksi"}
+                </p>
+              </>
+            )}
             <button
               type="button"
               className="mt-3 w-full rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20"
+              onClick={() => navigate("/reports")}
             >
               Lihat detail
             </button>

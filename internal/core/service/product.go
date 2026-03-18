@@ -172,12 +172,14 @@ func (ps *ProductService) UpdateProduct(ctx context.Context, product *domain.Pro
 		product.Name == "" &&
 		product.Image == "" &&
 		product.Price == 0 &&
+		product.Cost == 0 &&
 		product.Stock == 0
 
 	sameData := existingProduct.CategoryID == product.CategoryID &&
 		existingProduct.Name == product.Name &&
 		existingProduct.Image == product.Image &&
 		existingProduct.Price == product.Price &&
+		existingProduct.Cost == product.Cost &&
 		existingProduct.Stock == product.Stock
 
 	if emptyData || sameData {

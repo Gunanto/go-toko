@@ -28,9 +28,9 @@ func NewProductRepository(db *postgres.DB) *ProductRepository {
 // CreateProduct creates a new product record in the database
 func (pr *ProductRepository) CreateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error) {
 	query := pr.db.QueryBuilder.Insert("products").
-		Columns("category_id", "name", "image", "price", "stock").
-		Values(product.CategoryID, product.Name, product.Image, product.Price, product.Stock).
-		Suffix("RETURNING *")
+		Columns("category_id", "name", "image", "price", "cost", "stock").
+		Values(product.CategoryID, product.Name, product.Image, product.Price, product.Cost, product.Stock).
+		Suffix("RETURNING id, category_id, sku, name, stock, price, cost, image, created_at, updated_at")
 
 	sql, args, err := query.ToSql()
 	if err != nil {
@@ -44,6 +44,7 @@ func (pr *ProductRepository) CreateProduct(ctx context.Context, product *domain.
 		&product.Name,
 		&product.Stock,
 		&product.Price,
+		&product.Cost,
 		&product.Image,
 		&product.CreatedAt,
 		&product.UpdatedAt,
@@ -62,7 +63,18 @@ func (pr *ProductRepository) CreateProduct(ctx context.Context, product *domain.
 func (pr *ProductRepository) GetProductByID(ctx context.Context, id uint64) (*domain.Product, error) {
 	var product domain.Product
 
-	query := pr.db.QueryBuilder.Select("*").
+	query := pr.db.QueryBuilder.Select(
+		"id",
+		"category_id",
+		"sku",
+		"name",
+		"stock",
+		"price",
+		"cost",
+		"image",
+		"created_at",
+		"updated_at",
+	).
 		From("products").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -79,6 +91,7 @@ func (pr *ProductRepository) GetProductByID(ctx context.Context, id uint64) (*do
 		&product.Name,
 		&product.Stock,
 		&product.Price,
+		&product.Cost,
 		&product.Image,
 		&product.CreatedAt,
 		&product.UpdatedAt,
@@ -98,7 +111,18 @@ func (pr *ProductRepository) ListProducts(ctx context.Context, search string, ca
 	var product domain.Product
 	var products []domain.Product
 
-	query := pr.db.QueryBuilder.Select("*").
+	query := pr.db.QueryBuilder.Select(
+		"id",
+		"category_id",
+		"sku",
+		"name",
+		"stock",
+		"price",
+		"cost",
+		"image",
+		"created_at",
+		"updated_at",
+	).
 		From("products").
 		OrderBy("id").
 		Limit(limit).
@@ -131,6 +155,7 @@ func (pr *ProductRepository) ListProducts(ctx context.Context, search string, ca
 			&product.Name,
 			&product.Stock,
 			&product.Price,
+			&product.Cost,
 			&product.Image,
 			&product.CreatedAt,
 			&product.UpdatedAt,
@@ -155,6 +180,7 @@ func (pr *ProductRepository) UpdateProduct(ctx context.Context, product *domain.
 	name := nullString(product.Name)
 	image := nullString(product.Image)
 	price := nullFloat64(product.Price)
+	cost := nullFloat64(product.Cost)
 	stock := nullInt64(product.Stock)
 
 	query := pr.db.QueryBuilder.Update("products").
@@ -162,10 +188,11 @@ func (pr *ProductRepository) UpdateProduct(ctx context.Context, product *domain.
 		Set("category_id", sq.Expr("COALESCE(?, category_id)", categoryId)).
 		Set("image", sq.Expr("COALESCE(?, image)", image)).
 		Set("price", sq.Expr("COALESCE(?, price)", price)).
+		Set("cost", sq.Expr("COALESCE(?, cost)", cost)).
 		Set("stock", sq.Expr("COALESCE(?, stock)", stock)).
 		Set("updated_at", time.Now()).
 		Where(sq.Eq{"id": product.ID}).
-		Suffix("RETURNING *")
+		Suffix("RETURNING id, category_id, sku, name, stock, price, cost, image, created_at, updated_at")
 
 	sql, args, err := query.ToSql()
 	if err != nil {
@@ -179,6 +206,7 @@ func (pr *ProductRepository) UpdateProduct(ctx context.Context, product *domain.
 		&product.Name,
 		&product.Stock,
 		&product.Price,
+		&product.Cost,
 		&product.Image,
 		&product.CreatedAt,
 		&product.UpdatedAt,

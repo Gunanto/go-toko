@@ -118,6 +118,7 @@ type productResponse struct {
 	Name      string           `json:"name" example:"Chiki Ball"`
 	Stock     int64            `json:"stock" example:"100"`
 	Price     float64          `json:"price" example:"5000"`
+	Cost      float64          `json:"cost" example:"3000"`
 	Image     string           `json:"image" example:"https://example.com/chiki-ball.png"`
 	Category  categoryResponse `json:"category"`
 	CreatedAt time.Time        `json:"created_at" example:"1970-01-01T00:00:00Z"`
@@ -132,6 +133,7 @@ func newProductResponse(product *domain.Product) productResponse {
 		Name:      product.Name,
 		Stock:     product.Stock,
 		Price:     product.Price,
+		Cost:      product.Cost,
 		Image:     product.Image,
 		Category:  newCategoryResponse(product.Category),
 		CreatedAt: product.CreatedAt,
@@ -189,8 +191,10 @@ type orderProductResponse struct {
 	ProductID        uint64          `json:"product_id" example:"1"`
 	Quantity         int64           `json:"qty" example:"1"`
 	Price            float64         `json:"price" example:"100000"`
+	CostAtSale       float64         `json:"cost_at_sale" example:"70000"`
 	TotalNormalPrice float64         `json:"total_normal_price" example:"100000"`
 	TotalFinalPrice  float64         `json:"total_final_price" example:"100000"`
+	TotalCost        float64         `json:"total_cost" example:"70000"`
 	Product          productResponse `json:"product"`
 	CreatedAt        time.Time       `json:"created_at" example:"1970-01-01T00:00:00Z"`
 	UpdatedAt        time.Time       `json:"updated_at" example:"1970-01-01T00:00:00Z"`
@@ -207,8 +211,10 @@ func newOrderProductResponse(orderProduct []domain.OrderProduct) []orderProductR
 			ProductID:        orderProduct.ProductID,
 			Quantity:         orderProduct.Quantity,
 			Price:            orderProduct.Product.Price,
+			CostAtSale:       orderProduct.CostAtSale,
 			TotalNormalPrice: orderProduct.TotalPrice,
 			TotalFinalPrice:  orderProduct.TotalPrice,
+			TotalCost:        orderProduct.CostAtSale * float64(orderProduct.Quantity),
 			Product:          newProductResponse(orderProduct.Product),
 			CreatedAt:        orderProduct.CreatedAt,
 			UpdatedAt:        orderProduct.UpdatedAt,

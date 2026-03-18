@@ -52,6 +52,7 @@ func (os *OrderService) CreateOrder(ctx context.Context, order *domain.Order) (*
 		}
 
 		order.Products[i].TotalPrice = product.Price * float64(orderProduct.Quantity)
+		order.Products[i].CostAtSale = product.Cost
 		totalPrice += order.Products[i].TotalPrice
 	}
 

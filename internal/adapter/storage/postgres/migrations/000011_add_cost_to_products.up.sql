@@ -1,0 +1,2 @@
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS cost decimal(18, 2) NOT NULL DEFAULT 0;

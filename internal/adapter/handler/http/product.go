@@ -24,6 +24,7 @@ type createProductRequest struct {
 	Name       string  `json:"name" binding:"required" example:"Chiki Ball"`
 	Image      string  `json:"image" binding:"required" example:"https://example.com/chiki-ball.png"`
 	Price      float64 `json:"price" binding:"required,min=0" example:"5000"`
+	Cost       float64 `json:"cost" binding:"omitempty,min=0" example:"3000"`
 	Stock      int64   `json:"stock" binding:"required,min=0" example:"100"`
 }
 
@@ -61,6 +62,7 @@ func (ph *ProductHandler) CreateProduct(ctx *gin.Context) {
 		Name:       req.Name,
 		Image:      req.Image,
 		Price:      req.Price,
+		Cost:       req.Cost,
 		Stock:      req.Stock,
 	}
 
@@ -223,6 +225,7 @@ type updateProductRequest struct {
 	Name       string  `json:"name" binding:"omitempty,required" example:"Nutrisari Jeruk"`
 	Image      string  `json:"image" binding:"omitempty,required" example:"https://example.com/nutrisari-jeruk.png"`
 	Price      float64 `json:"price" binding:"omitempty,required,min=0" example:"2000"`
+	Cost       float64 `json:"cost" binding:"omitempty,min=0" example:"1500"`
 	Stock      int64   `json:"stock" binding:"omitempty,required,min=0" example:"200"`
 }
 
@@ -264,6 +267,7 @@ func (ph *ProductHandler) UpdateProduct(ctx *gin.Context) {
 		Name:       req.Name,
 		Image:      req.Image,
 		Price:      req.Price,
+		Cost:       req.Cost,
 		Stock:      req.Stock,
 	}
 

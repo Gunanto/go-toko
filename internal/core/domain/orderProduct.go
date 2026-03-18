@@ -9,6 +9,7 @@ type OrderProduct struct {
 	ProductID  uint64
 	Quantity   int64
 	TotalPrice float64
+	CostAtSale float64
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	Order      *Order
