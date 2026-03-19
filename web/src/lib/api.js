@@ -195,6 +195,37 @@ export async function fetchStoreCustomerMe(token) {
   return request("/store/auth/me", { token });
 }
 
+export async function getStoreChat({ token } = {}) {
+  return request("/store/chat", { token });
+}
+
+export async function listStoreChatMessages({
+  token,
+  skip = 0,
+  limit = 50,
+} = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  return request(`/store/chat/messages?${params.toString()}`, { token });
+}
+
+export async function sendStoreChatMessage(message, { token } = {}) {
+  return request("/store/chat/messages", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ message }),
+  });
+}
+
+export async function markStoreChatRead({ token } = {}) {
+  return request("/store/chat/read", {
+    method: "POST",
+    token,
+  });
+}
+
 export function getStoreGoogleAuthStartUrl(redirect = "/store/account") {
   const apiBase = API_BASE.endsWith("/v1") ? API_BASE.slice(0, -3) : API_BASE;
   const params = new URLSearchParams({ redirect });
@@ -382,5 +413,52 @@ export async function updateSettings(payload, { token } = {}) {
     method: "PUT",
     token,
     body: JSON.stringify(payload),
+  });
+}
+
+export async function listAdminChatConversations({
+  token,
+  skip = 0,
+  limit = 50,
+  status = "",
+} = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  if (status) params.set("status", status);
+  return request(`/chat/conversations?${params.toString()}`, { token });
+}
+
+export async function listAdminChatMessages(
+  conversationId,
+  { token, skip = 0, limit = 50 } = {},
+) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  return request(
+    `/chat/conversations/${conversationId}/messages?${params.toString()}`,
+    { token },
+  );
+}
+
+export async function sendAdminChatMessage(
+  conversationId,
+  body,
+  { token } = {},
+) {
+  return request(`/chat/conversations/${conversationId}/messages`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({ message: body }),
+  });
+}
+
+export async function markAdminChatRead(conversationId, { token } = {}) {
+  return request(`/chat/conversations/${conversationId}/read`, {
+    method: "POST",
+    token,
   });
 }

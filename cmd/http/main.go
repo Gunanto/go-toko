@@ -158,6 +158,11 @@ func main() {
 	storeAuthService := service.NewStoreAuthService(customerRepo, cache, token, storeGoogleConfig)
 	storeAuthHandler := http.NewStoreAuthHandler(storeAuthService)
 
+	storeConversationRepo := repository.NewStoreConversationRepository(db)
+	storeMessageRepo := repository.NewStoreMessageRepository(db)
+	storeChatService := service.NewStoreChatService(storeConversationRepo, storeMessageRepo, userRepo)
+	storeChatHandler := http.NewStoreChatHandler(storeChatService)
+
 	// Order
 	orderRepo := repository.NewOrderRepository(db)
 	orderService := service.NewOrderService(orderRepo, productRepo, categoryRepo, customerRepo, userRepo, paymentRepo, cache)
@@ -176,6 +181,7 @@ func main() {
 		*userHandler,
 		*authHandler,
 		*storeAuthHandler,
+		*storeChatHandler,
 		*paymentHandler,
 		*categoryHandler,
 		*productHandler,

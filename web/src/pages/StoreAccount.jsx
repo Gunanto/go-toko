@@ -200,6 +200,12 @@ function StoreAccount() {
             >
               Lacak Pesanan
             </Link>
+            <Link
+              to="/store/chat"
+              className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700"
+            >
+              Chat Admin
+            </Link>
             <StoreGoogleButton
               redirect="/store/account"
               className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700"

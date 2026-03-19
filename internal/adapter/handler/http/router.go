@@ -27,6 +27,7 @@ func NewRouter(
 	userHandler UserHandler,
 	authHandler AuthHandler,
 	storeAuthHandler StoreAuthHandler,
+	storeChatHandler StoreChatHandler,
 	paymentHandler PaymentHandler,
 	categoryHandler CategoryHandler,
 	productHandler ProductHandler,
@@ -118,6 +119,14 @@ func NewRouter(
 			store.GET("/orders/history", orderHandler.ListStoreOrdersByCustomer)
 			store.GET("/orders/:receipt_code", orderHandler.GetStoreOrderByReceiptCode)
 			store.POST("/orders", orderHandler.CreateStoreOrder)
+			storeChat := store.Group("/chat")
+			storeChat.Use(customerAuthMiddleware(token))
+			{
+				storeChat.GET("", storeChatHandler.GetCustomerConversation)
+				storeChat.GET("/messages", storeChatHandler.ListCustomerMessages)
+				storeChat.POST("/messages", storeChatHandler.SendCustomerMessage)
+				storeChat.POST("/read", storeChatHandler.MarkCustomerRead)
+			}
 		}
 		user := v1.Group("/users")
 		{
@@ -223,6 +232,14 @@ func NewRouter(
 			{
 				admin.PUT("", settingHandler.UpdateSettings)
 			}
+		}
+		chat := v1.Group("/chat")
+		chat.Use(authMiddleware(token), adminMiddleware())
+		{
+			chat.GET("/conversations", storeChatHandler.ListAdminConversations)
+			chat.GET("/conversations/:id/messages", storeChatHandler.ListAdminMessages)
+			chat.POST("/conversations/:id/messages", storeChatHandler.SendAdminMessage)
+			chat.POST("/conversations/:id/read", storeChatHandler.MarkAdminRead)
 		}
 	}
 

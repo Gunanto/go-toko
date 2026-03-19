@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logoGezy from "../assets/logo-gezy-transparent.png";
-import { listOrders } from "../lib/api";
+import { listAdminChatConversations, listOrders } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { label: "Kasir (POS)", to: "/pos", icon: "cash" },
   { label: "Produk", to: "/products", icon: "bag" },
   { label: "Pesanan", to: "/orders", icon: "receipt" },
+  { label: "Chat Inbox", to: "/chat", icon: "chat", adminOnly: true },
   { label: "Pelanggan", to: "/customers", icon: "users" },
   { label: "Inventori", to: "/inventory", icon: "boxes" },
   { label: "Laporan", to: "/reports", icon: "report" },
@@ -37,6 +38,16 @@ const iconMap = {
       d="M5 2a1 1 0 00-1 1v14l2-1 2 1 2-1 2 1 2-1 2 1V3a1 1 0 00-1-1H5zm2 4h6v2H7V6zm0 4h6v2H7v-2z"
       clipRule="evenodd"
     />
+  ),
+  chat: (
+    <>
+      <path
+        d="M4.75 5.75A2.75 2.75 0 0 1 7.5 3h5A2.75 2.75 0 0 1 15.25 5.75v3.5A2.75 2.75 0 0 1 12.5 12h-3l-2.75 2v-2A2.75 2.75 0 0 1 4.75 9.25v-3.5Z"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+      <path d="M9.5 15h3A2.5 2.5 0 0 0 15 12.5" />
+    </>
   ),
   users: (
     <path
@@ -70,11 +81,12 @@ const iconMap = {
 
 function Sidebar({ open, onClose }) {
   const navigate = useNavigate();
-  const { token, logout } = useAuth();
+  const { token, logout, user } = useAuth();
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightError, setInsightError] = useState("");
   const [marginPct, setMarginPct] = useState(0);
   const [topProduct, setTopProduct] = useState("");
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   const todayString = useMemo(() => {
     const now = new Date();
@@ -182,6 +194,54 @@ function Sidebar({ open, onClose }) {
     };
   }, [token, todayString, logout]);
 
+  useEffect(() => {
+    if (!token || user?.role !== "admin") {
+      setChatUnreadCount(0);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const loadUnread = async () => {
+      try {
+        const response = await listAdminChatConversations({
+          token,
+          skip: 0,
+          limit: 100,
+          status: "open",
+        });
+        if (cancelled) return;
+        const total = (response?.data?.conversations || []).reduce(
+          (sum, conversation) =>
+            sum + Number(conversation.admin_unread_count || 0),
+          0,
+        );
+        setChatUnreadCount(total);
+      } catch (error) {
+        if (cancelled) return;
+        if (error?.status === 401 || error?.status === 403) {
+          logout();
+        }
+      }
+    };
+
+    loadUnread();
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadUnread();
+      }
+    }, 15000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [logout, token, user?.role]);
+
+  const visibleNavItems = navItems.filter(
+    (item) => !item.adminOnly || user?.role === "admin",
+  );
+
   return (
     <>
       <aside
@@ -200,7 +260,7 @@ function Sidebar({ open, onClose }) {
             </div>
 
             <nav className="space-y-1">
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -214,15 +274,27 @@ function Sidebar({ open, onClose }) {
                   }
                   onClick={onClose}
                 >
-                  <svg
-                    className="h-5 w-5 text-gray-500 dark:text-slate-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    aria-hidden="true"
-                  >
-                    {iconMap[item.icon]}
-                  </svg>
-                  {item.label}
+                  <span className="relative inline-flex">
+                    <svg
+                      className="h-5 w-5 text-gray-500 dark:text-slate-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
+                    >
+                      {iconMap[item.icon]}
+                    </svg>
+                    {item.to === "/chat" && chatUnreadCount > 0 ? (
+                      <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-amber-300 px-1 py-0.5 text-[9px] font-bold leading-none text-slate-950">
+                        {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                  {item.to === "/chat" && chatUnreadCount > 0 ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-700 dark:bg-amber-300 dark:text-slate-950">
+                      {chatUnreadCount}
+                    </span>
+                  ) : null}
                 </NavLink>
               ))}
             </nav>
