@@ -12,9 +12,11 @@ import (
 	"github.com/bagashiz/go-pos/internal/adapter/config"
 	"github.com/bagashiz/go-pos/internal/adapter/handler/http"
 	"github.com/bagashiz/go-pos/internal/adapter/logger"
+	objectstorage "github.com/bagashiz/go-pos/internal/adapter/storage/object"
 	"github.com/bagashiz/go-pos/internal/adapter/storage/postgres"
 	"github.com/bagashiz/go-pos/internal/adapter/storage/postgres/repository"
 	"github.com/bagashiz/go-pos/internal/adapter/storage/redis"
+	"github.com/bagashiz/go-pos/internal/core/port"
 	"github.com/bagashiz/go-pos/internal/core/service"
 )
 
@@ -94,6 +96,21 @@ func main() {
 
 	slog.Info("Successfully connected to the cache server")
 
+	var objectStorage port.ObjectStorage
+	if config.Storage != nil && strings.TrimSpace(config.Storage.Driver) != "" {
+		objectStorage, err = objectstorage.NewMinIO(config.Storage)
+		if err != nil {
+			slog.Error("Error initializing object storage", "error", err)
+			os.Exit(1)
+		}
+
+		slog.Info(
+			"Successfully initialized object storage",
+			"driver", config.Storage.Driver,
+			"bucket", config.Storage.Bucket,
+		)
+	}
+
 	// Init token service
 	token, err := paseto.New(config.Token)
 	if err != nil {
@@ -150,6 +167,7 @@ func main() {
 	settingRepo := repository.NewSettingRepository(db)
 	settingService := service.NewSettingService(settingRepo, cache)
 	settingHandler := http.NewSettingHandler(settingService)
+	uploadHandler := http.NewUploadHandler(objectStorage)
 
 	// Init router
 	router, err := http.NewRouter(
@@ -164,6 +182,7 @@ func main() {
 		*orderHandler,
 		*customerHandler,
 		*settingHandler,
+		*uploadHandler,
 	)
 	if err != nil {
 		slog.Error("Error initializing router", "error", err)

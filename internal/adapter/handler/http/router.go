@@ -33,6 +33,7 @@ func NewRouter(
 	orderHandler OrderHandler,
 	customerHandler CustomerHandler,
 	settingHandler SettingHandler,
+	uploadHandler UploadHandler,
 ) (*Router, error) {
 	// Disable debug mode in production
 	if config.Env == "production" {
@@ -179,6 +180,15 @@ func NewRouter(
 				admin.POST("/bulk", productHandler.BulkCreateProducts)
 				admin.PUT("/:id", productHandler.UpdateProduct)
 				admin.DELETE("/:id", productHandler.DeleteProduct)
+			}
+		}
+		upload := v1.Group("/uploads")
+		upload.Use(authMiddleware(token))
+		{
+			admin := upload.Group("/")
+			admin.Use(adminMiddleware())
+			{
+				admin.POST("/products", uploadHandler.UploadProductImage)
 			}
 		}
 		order := v1.Group("/orders")

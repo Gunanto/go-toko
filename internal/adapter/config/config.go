@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -15,6 +16,7 @@ type (
 		DB          *DB
 		HTTP        *HTTP
 		StoreGoogle *StoreGoogle
+		Storage     *Storage
 	}
 	// App contains all the environment variables for the application
 	App struct {
@@ -52,6 +54,15 @@ type (
 		ClientSecret     string
 		RedirectURL      string
 		FrontendRedirect string
+	}
+	Storage struct {
+		Driver        string
+		Endpoint      string
+		AccessKey     string
+		SecretKey     string
+		Bucket        string
+		UseSSL        bool
+		PublicBaseURL string
 	}
 )
 
@@ -102,6 +113,16 @@ func New() (*Container, error) {
 		FrontendRedirect: os.Getenv("STORE_GOOGLE_FRONTEND_REDIRECT"),
 	}
 
+	storage := &Storage{
+		Driver:        os.Getenv("STORAGE_DRIVER"),
+		Endpoint:      os.Getenv("STORAGE_ENDPOINT"),
+		AccessKey:     os.Getenv("STORAGE_ACCESS_KEY"),
+		SecretKey:     os.Getenv("STORAGE_SECRET_KEY"),
+		Bucket:        os.Getenv("STORAGE_BUCKET"),
+		UseSSL:        strings.EqualFold(os.Getenv("STORAGE_USE_SSL"), "true"),
+		PublicBaseURL: os.Getenv("STORAGE_PUBLIC_BASE_URL"),
+	}
+
 	return &Container{
 		App:         app,
 		Token:       token,
@@ -109,5 +130,6 @@ func New() (*Container, error) {
 		DB:          db,
 		HTTP:        http,
 		StoreGoogle: storeGoogle,
+		Storage:     storage,
 	}, nil
 }

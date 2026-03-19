@@ -38,6 +38,13 @@ services:
       STORE_GOOGLE_CLIENT_SECRET: "${STORE_GOOGLE_CLIENT_SECRET:-}"
       STORE_GOOGLE_REDIRECT_URL: "${STORE_GOOGLE_REDIRECT_URL:-}"
       STORE_GOOGLE_FRONTEND_REDIRECT: "${STORE_GOOGLE_FRONTEND_REDIRECT:-}"
+      STORAGE_DRIVER: "${STORAGE_DRIVER:-}"
+      STORAGE_ENDPOINT: "${STORAGE_ENDPOINT:-}"
+      STORAGE_ACCESS_KEY: "${STORAGE_ACCESS_KEY:-}"
+      STORAGE_SECRET_KEY: "${STORAGE_SECRET_KEY:-}"
+      STORAGE_BUCKET: "${STORAGE_BUCKET:-}"
+      STORAGE_USE_SSL: "${STORAGE_USE_SSL:-false}"
+      STORAGE_PUBLIC_BASE_URL: "${STORAGE_PUBLIC_BASE_URL:-}"
     expose:
       - "8082"
     networks:
@@ -85,6 +92,23 @@ services:
     networks:
       - backend
 
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: go-toko-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: "${STORAGE_ACCESS_KEY}"
+      MINIO_ROOT_PASSWORD: "${STORAGE_SECRET_KEY}"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9000"
+      - "9001"
+    networks:
+      - edge
+      - backend
+
 networks:
   edge:
     external: true
@@ -96,3 +120,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

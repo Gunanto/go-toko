@@ -1,10 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8082/v1";
 
 async function request(path, options = {}) {
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+      ...(options.headers || {}),
     },
     ...options,
   });
@@ -219,6 +221,17 @@ export async function deleteProduct(id, { token } = {}) {
   return request(`/products/${id}`, {
     method: "DELETE",
     token,
+  });
+}
+
+export async function uploadProductImage(file, { token } = {}) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request("/uploads/products", {
+    method: "POST",
+    token,
+    body: formData,
   });
 }
 

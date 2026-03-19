@@ -14,6 +14,7 @@ import {
   listProducts,
   updateCategory,
   updateProduct,
+  uploadProductImage,
 } from "../lib/api";
 
 const initialProducts = [];
@@ -79,6 +80,8 @@ function Products() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [showSort, setShowSort] = useState(false);
@@ -501,6 +504,83 @@ function Products() {
     }
   };
 
+  const handleUploadSingleImage = async (event) => {
+    if (!isAdmin) {
+      warnAdminOnly();
+      return;
+    }
+
+    const [file] = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const response = await uploadProductImage(file, { token });
+      const url = response?.data?.url || "";
+      if (!url) {
+        throw new Error("URL gambar hasil upload tidak ditemukan.");
+      }
+      setForm((prev) => ({ ...prev, image: url }));
+      flash("success", "Gambar utama berhasil diupload.");
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal upload gambar utama.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleUploadGalleryImages = async (event) => {
+    if (!isAdmin) {
+      warnAdminOnly();
+      return;
+    }
+
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length === 0) return;
+
+    setUploadingGallery(true);
+    try {
+      const uploadedUrls = [];
+      for (const file of files) {
+        // Keep the flow deterministic and error messaging simple per batch.
+        const response = await uploadProductImage(file, { token });
+        const url = response?.data?.url || "";
+        if (!url) {
+          throw new Error("Salah satu gambar gallery gagal menghasilkan URL.");
+        }
+        uploadedUrls.push(url);
+      }
+
+      setForm((prev) => {
+        const current = prev.gallery
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const merged = Array.from(new Set([...current, ...uploadedUrls]));
+        return { ...prev, gallery: merged.join("\n") };
+      });
+
+      flash(
+        "success",
+        `${uploadedUrls.length} gambar gallery berhasil diupload.`,
+      );
+    } catch (error) {
+      if (error?.status === 401 || error?.status === 403) {
+        logout();
+        return;
+      }
+      flash("error", error.message || "Gagal upload gallery images.");
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
   const handleDelete = async (product) => {
     if (!isAdmin) {
       warnAdminOnly();
@@ -905,6 +985,21 @@ function Products() {
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                   placeholder={placeholderImage}
                 />
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleUploadSingleImage}
+                      disabled={uploadingImage}
+                    />
+                    {uploadingImage ? "Mengupload..." : "Upload ke MinIO"}
+                  </label>
+                  <span className="text-xs text-gray-500 dark:text-slate-400">
+                    Bisa tetap isi URL manual jika diperlukan.
+                  </span>
+                </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
@@ -918,6 +1013,24 @@ function Products() {
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                   placeholder={"Satu URL per baris\nhttps://...\nhttps://..."}
                 />
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      className="hidden"
+                      onChange={handleUploadGalleryImages}
+                      disabled={uploadingGallery}
+                    />
+                    {uploadingGallery
+                      ? "Mengupload Gallery..."
+                      : "Upload Gallery ke MinIO"}
+                  </label>
+                  <span className="text-xs text-gray-500 dark:text-slate-400">
+                    URL hasil upload akan ditambahkan otomatis satu per baris.
+                  </span>
+                </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
