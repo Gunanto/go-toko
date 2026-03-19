@@ -33,12 +33,13 @@ type createCustomerRequest struct {
 
 // updateCustomerRequest represents a request body for updating a customer
 type updateCustomerRequest struct {
-	Name    string `json:"name" binding:"omitempty,required" example:"John Doe"`
-	Phone   string `json:"phone" binding:"omitempty" example:"0812-3344-2211"`
-	Email   string `json:"email" binding:"omitempty,email" example:"john@example.com"`
-	Address string `json:"address" binding:"omitempty" example:"Jl. Merdeka No. 45, Bandung"`
-	Tier    string `json:"tier" binding:"omitempty" example:"gold"`
-	Notes   string `json:"notes" binding:"omitempty" example:"Langganan"`
+	Name     string `json:"name" binding:"omitempty,required" example:"John Doe"`
+	Phone    string `json:"phone" binding:"omitempty" example:"0812-3344-2211"`
+	Email    string `json:"email" binding:"omitempty,email" example:"john@example.com"`
+	Address  string `json:"address" binding:"omitempty" example:"Jl. Merdeka No. 45, Bandung"`
+	Tier     string `json:"tier" binding:"omitempty" example:"gold"`
+	Notes    string `json:"notes" binding:"omitempty" example:"Langganan"`
+	Password string `json:"password" binding:"omitempty,min=8" example:"TempPass123"`
 }
 
 // getCustomerRequest represents a request params for retrieving a customer
@@ -279,13 +280,14 @@ func (ch *CustomerHandler) UpdateCustomer(ctx *gin.Context) {
 	}
 
 	customer := domain.Customer{
-		ID:      id,
-		Name:    req.Name,
-		Phone:   req.Phone,
-		Email:   req.Email,
-		Address: req.Address,
-		Tier:    req.Tier,
-		Notes:   req.Notes,
+		ID:       id,
+		Name:     req.Name,
+		Phone:    req.Phone,
+		Email:    req.Email,
+		Address:  req.Address,
+		Tier:     req.Tier,
+		Notes:    req.Notes,
+		Password: req.Password,
 	}
 
 	updated, err := ch.svc.UpdateCustomer(ctx, &customer)

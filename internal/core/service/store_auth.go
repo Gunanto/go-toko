@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/bagashiz/go-pos/internal/core/domain"
@@ -25,6 +26,8 @@ type StoreAuthService struct {
 	httpClient *http.Client
 }
 
+var storePhoneSanitizer = regexp.MustCompile(`\D+`)
+
 func NewStoreAuthService(repo port.CustomerRepository, cache port.CacheRepository, token port.TokenService, google StoreGoogleConfig) *StoreAuthService {
 	return &StoreAuthService{
 		repo:       repo,
@@ -37,11 +40,12 @@ func NewStoreAuthService(repo port.CustomerRepository, cache port.CacheRepositor
 
 func (sas *StoreAuthService) Register(ctx context.Context, customer *domain.Customer, password string) (*domain.Customer, string, error) {
 	customer.Name = strings.TrimSpace(customer.Name)
-	customer.Phone = strings.TrimSpace(customer.Phone)
+	customer.Phone = normalizeStorePhone(customer.Phone)
 	customer.Email = strings.TrimSpace(strings.ToLower(customer.Email))
 	customer.Address = strings.TrimSpace(customer.Address)
+	password = strings.TrimSpace(password)
 
-	if customer.Name == "" || strings.TrimSpace(password) == "" {
+	if customer.Name == "" || password == "" {
 		return nil, "", domain.ErrNoUpdatedData
 	}
 	if customer.Email == "" && customer.Phone == "" {
@@ -123,7 +127,7 @@ func (sas *StoreAuthService) Login(ctx context.Context, login, password string) 
 	if strings.Contains(login, "@") {
 		customer, err = sas.repo.GetCustomerByEmail(ctx, login)
 	} else {
-		customer, err = sas.repo.GetCustomerByPhone(ctx, login)
+		customer, err = sas.repo.GetCustomerByPhone(ctx, normalizeStorePhone(login))
 	}
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -160,6 +164,9 @@ func (sas *StoreAuthService) IsGoogleOAuthEnabled() bool {
 }
 
 func (sas *StoreAuthService) findExistingCustomer(ctx context.Context, phone, email string) (*domain.Customer, error) {
+	phone = normalizeStorePhone(phone)
+	email = strings.TrimSpace(strings.ToLower(email))
+
 	if phone != "" {
 		customer, err := sas.repo.GetCustomerByPhone(ctx, phone)
 		if err == nil {
@@ -179,6 +186,14 @@ func (sas *StoreAuthService) findExistingCustomer(ctx context.Context, phone, em
 		}
 	}
 	return nil, domain.ErrDataNotFound
+}
+
+func normalizeStorePhone(phone string) string {
+	phone = strings.TrimSpace(phone)
+	if phone == "" {
+		return ""
+	}
+	return storePhoneSanitizer.ReplaceAllString(phone, "")
 }
 
 func (sas *StoreAuthService) invalidateCustomerCache(ctx context.Context, customerID uint64) error {

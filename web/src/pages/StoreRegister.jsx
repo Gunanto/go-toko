@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logoCommerce from "../assets/logo-gezy-commerce-transparent.png";
+import PasswordField from "../components/PasswordField";
 import StoreGoogleButton from "../components/StoreGoogleButton";
 import { useStoreAuth } from "../context/StoreAuthContext";
 
@@ -26,7 +27,7 @@ function StoreRegister() {
       await register(form);
       navigate(redirectTo);
     } catch (err) {
-      setError(err.message || "Registrasi customer gagal.");
+      setError(err.message || "Pendaftaran akun belum berhasil. Coba lagi.");
     }
   };
 
@@ -41,10 +42,10 @@ function StoreRegister() {
           />
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
-              Customer Register
+              Akun Baru
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-              Buat akun belanja
+              Daftar untuk belanja lebih praktis
             </h1>
           </div>
         </div>
@@ -74,7 +75,7 @@ function StoreRegister() {
             onChange={(event) =>
               setForm((prev) => ({ ...prev, phone: event.target.value }))
             }
-            placeholder="Nomor telepon"
+            placeholder="Nomor WhatsApp / telepon"
             className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
           />
           <textarea
@@ -85,14 +86,12 @@ function StoreRegister() {
             }
             className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
           />
-          <input
-            type="password"
+          <PasswordField
             value={form.password}
             onChange={(event) =>
               setForm((prev) => ({ ...prev, password: event.target.value }))
             }
             placeholder="Password minimal 8 karakter"
-            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
           />
           {error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -104,7 +103,7 @@ function StoreRegister() {
             disabled={loading}
             className="w-full rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {loading ? "Memproses..." : "Daftar"}
+            {loading ? "Memproses..." : "Daftar Sekarang"}
           </button>
         </form>
 
@@ -117,13 +116,13 @@ function StoreRegister() {
 
         <div className="mt-4 flex items-center justify-between text-sm">
           <Link to="/store" className="font-semibold text-slate-600">
-            Kembali ke toko
+            Kembali belanja
           </Link>
           <Link
             to={`/store/login?redirect=${encodeURIComponent(redirectTo)}`}
             className="font-semibold text-sky-700"
           >
-            Sudah punya akun
+            Sudah punya akun?
           </Link>
         </div>
       </div>

@@ -33,7 +33,7 @@ function StoreOrderStatus() {
       return {
         label: "-",
         tone: "border-slate-200 bg-slate-100 text-slate-600",
-        summary: "Masukkan kode receipt untuk melihat status pesanan.",
+        summary: "Masukkan kode pesanan untuk melihat perkembangan pesananmu.",
       };
     }
     if (order.status === "paid") {
@@ -41,20 +41,20 @@ function StoreOrderStatus() {
         label: "Selesai",
         tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
         summary:
-          "Pembayaran sudah tercatat. Pesanan siap ditindaklanjuti toko.",
+          "Pembayaran sudah tercatat dan pesananmu sedang diproses oleh toko.",
       };
     }
     return {
       label: "Menunggu Pembayaran",
       tone: "border-amber-200 bg-amber-50 text-amber-700",
-      summary: "Pesanan sudah masuk ke backend dan masih menunggu pelunasan.",
+      summary: "Pesanan sudah diterima dan menunggu penyelesaian pembayaran.",
     };
   }, [order]);
 
   const fetchOrder = async (nextReceiptCode) => {
     const normalized = nextReceiptCode.trim();
     if (!normalized) {
-      setError("Kode receipt wajib diisi.");
+      setError("Kode pesanan perlu diisi.");
       setOrder(null);
       return;
     }
@@ -68,7 +68,9 @@ function StoreOrderStatus() {
       setSearchParams({ receipt: normalized });
     } catch (err) {
       setOrder(null);
-      setError(err.message || "Pesanan tidak ditemukan.");
+      setError(
+        err.message || "Pesanan belum ditemukan. Periksa lagi kode pesananmu.",
+      );
     } finally {
       setLoading(false);
     }
@@ -102,7 +104,7 @@ function StoreOrderStatus() {
                 Status Pesanan
               </p>
               <p className="text-sm text-slate-500">
-                Cek pesanan storefront dengan receipt code.
+                Pantau status pesananmu kapan saja dengan kode pesanan.
               </p>
             </div>
           </div>
@@ -115,15 +117,16 @@ function StoreOrderStatus() {
           <div className="grid gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:grid-cols-[1.05fr,0.95fr] lg:px-10 lg:py-10">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200 sm:text-xs sm:tracking-[0.3em]">
-                Receipt Tracking
+                Lacak Pesanan
               </p>
               <h1 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-                Masukkan receipt code untuk melihat status order dari toko.
+                Masukkan kode pesanan untuk melihat perkembangan pesananmu dari
+                toko.
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                Halaman ini cocok dipakai setelah checkout publik. Customer
-                cukup simpan receipt code lalu buka kembali halaman ini kapan
-                saja.
+                Setelah pembayaran selesai, simpan kode pesananmu dan gunakan
+                halaman ini kapan saja untuk memantau status pesanan dengan
+                mudah.
               </p>
               <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/10 px-4 py-4 text-sm text-slate-300">
                 Status saat ini:{" "}
@@ -137,7 +140,7 @@ function StoreOrderStatus() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
-                    Kode Receipt
+                    Kode Pesanan
                   </label>
                   <input
                     type="text"
@@ -152,7 +155,7 @@ function StoreOrderStatus() {
                   disabled={loading}
                   className="w-full rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading ? "Mencari..." : "Cek Status Pesanan"}
+                  {loading ? "Mencari..." : "Lihat Status Pesanan"}
                 </button>
                 {error ? (
                   <div className="rounded-2xl border border-rose-300/40 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
@@ -171,7 +174,7 @@ function StoreOrderStatus() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                      Receipt Code
+                      Kode Pesanan
                     </p>
                     <h2 className="mt-2 break-all text-xl font-semibold text-slate-950 sm:text-2xl">
                       {order.receipt_id}
@@ -190,7 +193,7 @@ function StoreOrderStatus() {
                     ["Email", order.customer_email || "-"],
                     ["Alamat", order.shipping_address || "-"],
                     ["Pembayaran", order.payment_type?.name || "-"],
-                    ["Waktu Order", formatDateTime(order.created_at)],
+                    ["Waktu Pesan", formatDateTime(order.created_at)],
                   ].map(([label, value]) => (
                     <div
                       key={label}
@@ -208,7 +211,7 @@ function StoreOrderStatus() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.8rem] border border-sky-100 bg-sky-50/80 p-5 shadow-soft-xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                    Total Belanja
+                    Total Pesanan
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-slate-950">
                     {formatCurrency(order.total_price)}
@@ -216,7 +219,7 @@ function StoreOrderStatus() {
                 </div>
                 <div className="rounded-[1.8rem] border border-emerald-100 bg-emerald-50/80 p-5 shadow-soft-xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
-                    Dibayar
+                    Total Dibayar
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-slate-950">
                     {formatCurrency(order.total_paid)}
@@ -236,10 +239,10 @@ function StoreOrderStatus() {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-soft-xl">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-xl font-semibold text-slate-950">
-                  Ringkasan Item
+                  Ringkasan Pesanan
                 </h3>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
-                  {(order.products || []).length} baris
+                  {(order.products || []).length} item
                 </span>
               </div>
               <div className="mt-4 space-y-3">

@@ -95,7 +95,7 @@ function StoreProduct() {
             />
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700 sm:text-sm sm:tracking-[0.24em]">
-                Detail Produk
+                Pilihan Favorit
               </p>
               <p className="text-sm text-slate-500">{storeName}</p>
             </div>
@@ -117,7 +117,7 @@ function StoreProduct() {
 
         {loading ? (
           <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
-            Memuat detail produk...
+            Menyiapkan detail produk untukmu...
           </div>
         ) : product ? (
           <div className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
@@ -155,13 +155,13 @@ function StoreProduct() {
 
               <div className="rounded-[2rem] border border-slate-200 bg-[linear-gradient(135deg,_#fff7ed,_#ffffff_40%,_#eff6ff)] p-5 shadow-soft-xl sm:p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">
-                  Kenapa Produk Ini Menarik
+                  Alasan Kamu Akan Menyukainya
                 </p>
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   {[
                     ["Kategori", product.category?.name || "Umum"],
                     ["Slug", `/${product.slug}`],
-                    ["Kontak Toko", storeContact],
+                    ["Hubungi Toko", storeContact],
                   ].map(([label, value]) => (
                     <div
                       key={label}
@@ -195,20 +195,19 @@ function StoreProduct() {
                   {product.name}
                 </h1>
                 <p className="mt-3 text-sm leading-7 text-slate-500">
-                  {product.description || "Deskripsi produk belum diisi."}
+                  {product.description ||
+                    `Pilihan terbaik dari ${storeName} yang siap melengkapi kebutuhanmu hari ini.`}
                 </p>
 
                 <div className="mt-6 rounded-[1.8rem] bg-slate-950 px-5 py-5 text-white">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-                    Harga jual
+                    Harga terbaik
                   </p>
                   <p className="mt-2 text-3xl font-semibold sm:text-4xl">
                     {formatCurrency(product.price)}
                   </p>
                   <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
-                    <span className="text-sm text-slate-300">
-                      Stok tersedia
-                    </span>
+                    <span className="text-sm text-slate-300">Siap dipesan</span>
                     <span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white">
                       {product.stock ?? 0} unit
                     </span>
@@ -224,21 +223,21 @@ function StoreProduct() {
                     }}
                     className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white"
                   >
-                    Tambahkan ke Keranjang
+                    Masukkan ke Keranjang
                   </button>
                   <Link
                     to="/store/cart"
                     className="rounded-full border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700"
                   >
-                    Checkout Sekarang
+                    Lanjut ke Checkout
                   </Link>
                 </div>
 
                 <div className="mt-6 grid gap-3">
                   {[
-                    "Checkout terhubung langsung ke backend.",
-                    "Status pesanan bisa dicek publik via receipt code.",
-                    "Alamat default storefront: ambil di toko.",
+                    "Pesananmu diproses langsung ke sistem toko dengan lebih praktis.",
+                    "Status pesanan dapat dipantau dengan mudah setelah pembayaran.",
+                    "Bisa ambil di toko atau lanjutkan sesuai kebutuhan pengirimanmu.",
                   ].map((item) => (
                     <div
                       key={item}

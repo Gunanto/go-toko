@@ -135,6 +135,21 @@ func (cs *CustomerService) ListCustomers(ctx context.Context, skip, limit uint64
 
 // UpdateCustomer updates a customer
 func (cs *CustomerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+	customer.Name = strings.TrimSpace(customer.Name)
+	customer.Phone = strings.TrimSpace(customer.Phone)
+	customer.Email = strings.TrimSpace(strings.ToLower(customer.Email))
+	customer.Address = strings.TrimSpace(customer.Address)
+	customer.Notes = strings.TrimSpace(customer.Notes)
+
+	if strings.TrimSpace(customer.Password) != "" {
+		hashedPassword, err := util.HashPassword(strings.TrimSpace(customer.Password))
+		if err != nil {
+			return nil, domain.ErrInternal
+		}
+		customer.Password = hashedPassword
+		customer.AuthProvider = "password"
+	}
+
 	updated, err := cs.repo.UpdateCustomer(ctx, customer)
 	if err != nil {
 		return nil, err

@@ -48,6 +48,7 @@ function Settings() {
   const [userForm, setUserForm] = useState(initialUserForm);
   const [paymentForm, setPaymentForm] = useState(initialPaymentForm);
   const [editingUserId, setEditingUserId] = useState(null);
+  const [editingUserSnapshot, setEditingUserSnapshot] = useState(null);
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -70,6 +71,7 @@ function Settings() {
   const resetUserForm = () => {
     setUserForm(initialUserForm);
     setEditingUserId(null);
+    setEditingUserSnapshot(null);
   };
 
   const resetPaymentForm = () => {
@@ -225,6 +227,12 @@ function Settings() {
           password: "",
           role: detail.role || "cashier",
         });
+        setEditingUserSnapshot({
+          name: detail.name || "",
+          username: detail.username || "",
+          email: detail.email || "",
+          role: detail.role || "cashier",
+        });
       } catch (error) {
         if (error?.status === 401 || error?.status === 403) {
           logout();
@@ -259,15 +267,34 @@ function Settings() {
     setSavingUser(true);
     try {
       if (editingUserId) {
-        const payload = {
-          name: userForm.name.trim(),
-          username: userForm.username.trim(),
-          email: userForm.email.trim(),
-          role: isEditingCurrentUser ? user.role : userForm.role,
-          ...(userForm.password.trim()
-            ? { password: userForm.password.trim() }
-            : {}),
-        };
+        const nextName = userForm.name.trim();
+        const nextUsername = userForm.username.trim();
+        const nextEmail = userForm.email.trim();
+        const nextRole = isEditingCurrentUser ? user.role : userForm.role;
+        const nextPassword = userForm.password.trim();
+        const payload = {};
+
+        if (nextName !== editingUserSnapshot?.name) {
+          payload.name = nextName;
+        }
+        if (nextUsername !== editingUserSnapshot?.username) {
+          payload.username = nextUsername;
+        }
+        if (nextEmail !== editingUserSnapshot?.email) {
+          payload.email = nextEmail;
+        }
+        if (nextRole !== editingUserSnapshot?.role) {
+          payload.role = nextRole;
+        }
+        if (nextPassword) {
+          payload.password = nextPassword;
+        }
+
+        if (!Object.keys(payload).length) {
+          flash("error", "Tidak ada perubahan untuk disimpan.");
+          return;
+        }
+
         await updateUser(editingUserId, payload, { token });
         flash("success", "Pengguna berhasil diperbarui.");
       } else {

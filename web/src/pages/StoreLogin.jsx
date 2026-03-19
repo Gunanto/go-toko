@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logoCommerce from "../assets/logo-gezy-commerce-transparent.png";
+import PasswordField from "../components/PasswordField";
 import StoreGoogleButton from "../components/StoreGoogleButton";
 import { useStoreAuth } from "../context/StoreAuthContext";
 
@@ -21,7 +22,7 @@ function StoreLogin() {
       await login(loginValue, password);
       navigate(redirectTo);
     } catch (err) {
-      setError(err.message || "Login customer gagal.");
+      setError(err.message || "Masuk ke akun belum berhasil. Coba lagi.");
     }
   };
 
@@ -36,10 +37,10 @@ function StoreLogin() {
           />
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-              Customer Login
+              Akun Pelanggan
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-              Masuk ke akun belanja
+              Masuk untuk lanjut belanja lebih cepat
             </h1>
           </div>
         </div>
@@ -49,15 +50,13 @@ function StoreLogin() {
             type="text"
             value={loginValue}
             onChange={(event) => setLoginValue(event.target.value)}
-            placeholder="Email atau nomor telepon"
+            placeholder="Email atau nomor WhatsApp"
             className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
           />
-          <input
-            type="password"
+          <PasswordField
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
-            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
           />
           {error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -69,7 +68,7 @@ function StoreLogin() {
             disabled={loading}
             className="w-full rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {loading ? "Memproses..." : "Masuk"}
+            {loading ? "Memproses..." : "Masuk Sekarang"}
           </button>
         </form>
 
@@ -82,13 +81,13 @@ function StoreLogin() {
 
         <div className="mt-4 flex items-center justify-between text-sm">
           <Link to="/store" className="font-semibold text-slate-600">
-            Kembali ke toko
+            Kembali belanja
           </Link>
           <Link
             to={`/store/register?redirect=${encodeURIComponent(redirectTo)}`}
             className="font-semibold text-sky-700"
           >
-            Buat akun
+            Buat akun baru
           </Link>
         </div>
       </div>

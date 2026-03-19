@@ -129,7 +129,7 @@ function StoreCart() {
         }
 
         setCustomerId(String(customer.id || ""));
-        setLookupMessage(`Customer lama ditemukan: ${customer.name}`);
+        setLookupMessage(`Pelanggan lama ditemukan: ${customer.name}`);
         setCustomerName((prev) => prev.trim() || customer.name || "");
         setShippingAddress((prev) => {
           const normalized = prev.trim().toLowerCase();
@@ -145,7 +145,9 @@ function StoreCart() {
           setLookupMessage("");
           return;
         }
-        setLookupMessage("Lookup customer gagal. Lanjutkan checkout manual.");
+        setLookupMessage(
+          "Pencarian pelanggan gagal. Lanjutkan pembayaran secara manual.",
+        );
       } finally {
         setLookingUpCustomer(false);
       }
@@ -292,16 +294,16 @@ function StoreCart() {
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
-      flash("error", "Login customer wajib sebelum checkout.");
+      flash("error", "Masuk dulu untuk melanjutkan pembayaran.");
       navigate("/store/login?redirect=/store/cart");
       return;
     }
     if (!customerName.trim()) {
-      flash("error", "Nama pemesan wajib diisi.");
+      flash("error", "Nama pemesan perlu diisi.");
       return;
     }
     if (!paymentId) {
-      flash("error", "Pilih metode pembayaran.");
+      flash("error", "Pilih metode pembayaran yang kamu inginkan.");
       return;
     }
 
@@ -358,10 +360,10 @@ function StoreCart() {
             />
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">
-                Keranjang
+                Keranjang Belanja
               </p>
               <p className="text-sm text-slate-500">
-                Checkout publik dasar untuk {storeName}
+                Hampir selesai, lengkapi pesananmu di {storeName}
               </p>
             </div>
           </div>
@@ -380,7 +382,7 @@ function StoreCart() {
                 }}
                 className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
               >
-                Kosongkan
+                Kosongkan Keranjang
               </button>
             ) : null}
           </div>
@@ -402,7 +404,7 @@ function StoreCart() {
 
         {items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white/80 px-4 py-12 text-center text-sm text-slate-500">
-            Keranjang masih kosong.
+            Keranjangmu masih kosong. Yuk, pilih produk favoritmu dulu.
           </div>
         ) : (
           <div className="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
@@ -479,26 +481,27 @@ function StoreCart() {
 
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-soft-xl sm:p-6">
               <h1 className="text-2xl font-semibold text-slate-950">
-                Ringkasan Belanja
+                Ringkasan Pesanan
               </h1>
 
               {!isAuthenticated ? (
                 <div className="mt-6 rounded-[1.4rem] border border-amber-200 bg-amber-50 px-4 py-4">
                   <p className="text-sm font-semibold text-amber-800">
-                    Login customer wajib sebelum checkout.
+                    Masuk ke akun pelanggan untuk melanjutkan pembayaran dengan
+                    lebih cepat.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Link
                       to="/store/login?redirect=/store/cart"
                       className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
                     >
-                      Masuk
+                      Masuk Sekarang
                     </Link>
                     <Link
                       to="/store/register?redirect=/store/cart"
                       className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
                     >
-                      Daftar
+                      Daftar Akun
                     </Link>
                     <StoreGoogleButton
                       redirect="/store/cart"
@@ -513,7 +516,7 @@ function StoreCart() {
                   type="text"
                   value={customerName}
                   onChange={(event) => setCustomerName(event.target.value)}
-                  placeholder="Nama pemesan"
+                  placeholder="Nama lengkap pemesan"
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900"
                 />
                 <input
@@ -532,7 +535,7 @@ function StoreCart() {
                 />
                 {lookingUpCustomer ? (
                   <p className="text-xs text-slate-500">
-                    Mencari data customer...
+                    Menyiapkan data pelanggan...
                   </p>
                 ) : lookupMessage ? (
                   <p className="text-xs text-emerald-600">{lookupMessage}</p>
@@ -569,7 +572,7 @@ function StoreCart() {
                 <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <h2 className="text-sm font-semibold text-slate-900">
-                      Riwayat Pesanan
+                      Riwayat Pesanan Terakhir
                     </h2>
                     {loadingHistory ? (
                       <span className="text-xs text-slate-500">Memuat...</span>
@@ -604,7 +607,7 @@ function StoreCart() {
                       ))
                     ) : (
                       <p className="text-xs text-slate-500">
-                        Belum ada riwayat pesanan storefront untuk customer ini.
+                        Belum ada riwayat pesanan sebelumnya untuk akun ini.
                       </p>
                     )}
                   </div>
@@ -613,7 +616,7 @@ function StoreCart() {
 
               <div className="mt-6 space-y-3">
                 <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-100 px-4 py-3">
-                  <span className="text-sm text-slate-500">Item</span>
+                  <span className="text-sm text-slate-500">Total Item</span>
                   <span className="font-semibold text-slate-900">
                     {items.reduce((sum, item) => sum + item.qty, 0)}
                   </span>
@@ -639,7 +642,9 @@ function StoreCart() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-950 px-4 py-3">
-                  <span className="text-sm text-slate-300">Total Akhir</span>
+                  <span className="text-sm text-slate-300">
+                    Total Pembayaran
+                  </span>
                   <span className="font-semibold text-white">
                     {formatCurrency(grandTotal)}
                   </span>
@@ -653,7 +658,7 @@ function StoreCart() {
                   rel="noreferrer"
                   className="mt-6 block w-full rounded-xl bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white"
                 >
-                  Kirim via WhatsApp
+                  Kirim Ringkasan via WhatsApp
                 </a>
               ) : (
                 <button
@@ -671,7 +676,7 @@ function StoreCart() {
                 disabled={submitting}
                 className="mt-3 w-full rounded-xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {submitting ? "Memproses..." : "Checkout ke Backend"}
+                {submitting ? "Memproses Pesanan..." : "Selesaikan Checkout"}
               </button>
 
               <button
@@ -679,13 +684,13 @@ function StoreCart() {
                 onClick={handleCopySummary}
                 className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700"
               >
-                Copy Summary
+                Salin Ringkasan
               </button>
 
               <p className="mt-3 text-xs text-slate-500">
-                Checkout publik dasar ini mengirim ringkasan order ke toko. Jika
-                kontak WhatsApp toko belum diatur, gunakan tombol copy lalu
-                kirim manual.
+                Ringkasan pesanan bisa langsung dikirim ke toko. Jika WhatsApp
+                toko belum tersedia, salin ringkasannya lalu kirim secara
+                manual.
               </p>
             </section>
           </div>

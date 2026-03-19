@@ -23,11 +23,15 @@ function StoreAccount() {
             />
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                Akun Customer
+                Akun Pelanggan
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-slate-950">
                 {customer?.name}
               </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Kelola informasi akunmu dan lanjutkan belanja dengan lebih
+                cepat.
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -35,16 +39,26 @@ function StoreAccount() {
               to="/store"
               className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
             >
-              Kembali ke toko
+              Kembali belanja
             </Link>
             <button
               type="button"
               onClick={logout}
               className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
             >
-              Logout
+              Keluar
             </button>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-[1.6rem] border border-sky-100 bg-sky-50/80 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
+            Ringkasan Akun
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Pastikan data akunmu selalu siap dipakai agar proses pembayaran,
+            pelacakan pesanan, dan komunikasi dengan toko berjalan lebih lancar.
+          </p>
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -52,8 +66,8 @@ function StoreAccount() {
             ["Email", customer?.email || "-"],
             ["Telepon", customer?.phone || "-"],
             ["Alamat", customer?.address || "-"],
-            ["Tier", customer?.tier || "-"],
-            ["Provider", customer?.auth_provider || "-"],
+            ["Level Member", customer?.tier || "-"],
+            ["Metode Masuk", customer?.auth_provider || "-"],
           ].map(([label, value]) => (
             <div
               key={label}
@@ -74,13 +88,13 @@ function StoreAccount() {
             to="/store/cart"
             className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white"
           >
-            Lanjut ke checkout
+            Lanjut ke Pembayaran
           </Link>
           <Link
             to="/store/orders/status"
             className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700"
           >
-            Cek status pesanan
+            Lacak Pesanan
           </Link>
           <StoreGoogleButton
             redirect="/store/account"

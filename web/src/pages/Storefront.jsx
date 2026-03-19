@@ -143,23 +143,24 @@ function Storefront() {
               <div className="absolute -left-10 top-0 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl" />
               <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-amber-300/20 blur-3xl" />
               <p className="relative text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-200 sm:text-xs sm:tracking-[0.34em]">
-                Belanja publik di {storeName}
+                Etalase Resmi {storeName}
               </p>
               <h1 className="relative mt-4 max-w-3xl text-3xl font-semibold leading-tight sm:mt-5 sm:text-4xl lg:text-6xl">
-                Etalase yang sudah siap terasa seperti marketplace, langsung di
-                `http://localhost:5175/`.
+                Temukan produk pilihan dan nikmati pengalaman belanja yang
+                cepat, praktis, dan nyaman.
               </h1>
               <p className="relative mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:mt-5 sm:leading-7 lg:text-base">
-                {storeAddress} Jelajahi produk published, simpan ke keranjang,
-                checkout ke backend, dan cek status pesanan tanpa perlu login.
-                Kontak toko:{" "}
+                Selamat datang di etalase resmi kami, tempat produk pilihan siap
+                kamu pesan dengan cepat dan praktis. Nikmati pengalaman belanja
+                yang mudah, pembayaran yang lancar, dan pemantauan pesanan tanpa
+                ribet. Tersedia di {storeAddress}. Hubungi{" "}
                 <span className="font-semibold text-white">{storeContact}</span>
                 .
               </p>
               <div className="relative mt-6 grid gap-3 sm:mt-7 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-                    Produk Tayang
+                    Pilihan Siap Dipesan
                   </p>
                   <p className="mt-2 text-2xl font-semibold">
                     {products.length}
@@ -167,7 +168,7 @@ function Storefront() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-cyan-400/10 px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
-                    Kategori
+                    Ragam Kategori
                   </p>
                   <p className="mt-2 text-2xl font-semibold">
                     {Math.max(categories.length - 1, 0)}
@@ -175,7 +176,7 @@ function Storefront() {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-amber-300/10 px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.24em] text-amber-200">
-                    Siap Checkout
+                    Siap Dibeli
                   </p>
                   <p className="mt-2 text-2xl font-semibold">
                     {
@@ -190,13 +191,13 @@ function Storefront() {
             <div className="rounded-[2rem] border border-white/10 bg-white/8 p-4 backdrop-blur sm:p-5">
               <div className="rounded-[1.5rem] border border-white/10 bg-white/10 p-4">
                 <label className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-300">
-                  Cari Produk
+                  Temukan Favoritmu
                 </label>
                 <input
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Cari nama, kategori, atau slug..."
+                  placeholder="Cari produk, kategori, atau promo favorit..."
                   className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none"
                 />
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -211,7 +212,7 @@ function Storefront() {
                           : "bg-white/10 text-slate-200 hover:bg-white/15"
                       }`}
                     >
-                      {category === "all" ? "Semua Kategori" : category}
+                      {category === "all" ? "Lihat Semua" : category}
                     </button>
                   ))}
                 </div>
@@ -232,7 +233,7 @@ function Storefront() {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200">
-                          Sorotan {index + 1}
+                          Pilihan Unggulan {index + 1}
                         </p>
                         <p className="mt-1 truncate text-base font-semibold text-white">
                           {product.name}
@@ -245,7 +246,7 @@ function Storefront() {
                   ))
                 ) : (
                   <div className="rounded-[1.4rem] border border-dashed border-white/15 bg-white/5 px-4 py-8 text-center text-sm text-slate-300">
-                    Belum ada produk yang cocok dengan filter saat ini.
+                    Belum ada produk yang sesuai dengan pilihanmu saat ini.
                   </div>
                 )}
               </div>
@@ -262,13 +263,13 @@ function Storefront() {
         <section className="mt-8 grid gap-4 lg:grid-cols-[0.9fr,1.1fr]">
           <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-5 shadow-soft-xl sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">
-              Cara Belanja
+              Belanja Lebih Mudah
             </p>
             <div className="mt-5 grid gap-3">
               {[
-                "Cari produk atau pilih kategori yang paling relevan.",
-                "Tambahkan item ke keranjang dari listing atau halaman detail.",
-                "Checkout ke backend dan lanjut cek status dari receipt code.",
+                "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
+                "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
+                "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
               ].map((item, index) => (
                 <div
                   key={item}
@@ -290,14 +291,14 @@ function Storefront() {
                   Koleksi Pilihan
                 </p>
                 <h2 className="mt-3 text-2xl font-semibold text-slate-950 sm:text-3xl">
-                  Produk yang paling siap tampil seperti katalog marketplace
+                  Koleksi unggulan yang siap kamu pesan hari ini
                 </h2>
               </div>
               <Link
                 to="/store/cart"
                 className="rounded-full bg-slate-950 px-4 py-2 text-center text-sm font-semibold text-white"
               >
-                Lihat Keranjang
+                Lanjut ke Keranjang
               </Link>
             </div>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -320,7 +321,7 @@ function Storefront() {
                         {product.category?.name || "Umum"}
                       </span>
                       <span className="text-xs font-semibold text-slate-500">
-                        Stok {product.stock ?? 0}
+                        Tersedia {product.stock ?? 0}
                       </span>
                     </div>
                     <h3 className="mt-4 text-lg font-semibold text-slate-950">
@@ -328,7 +329,7 @@ function Storefront() {
                     </h3>
                     <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
                       {product.description ||
-                        `Produk siap tampil di katalog ${storeName}.`}
+                        `Pilihan menarik dari ${storeName} yang siap kamu pesan hari ini.`}
                     </p>
                     <div className="mt-5 flex items-end justify-between gap-3">
                       <div>
@@ -362,14 +363,14 @@ function Storefront() {
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-                Semua Produk
+                Semua Pilihan
               </p>
               <h2 className="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">
-                Listing siap dijadikan fondasi UI marketplace
+                Jelajahi produk terbaik yang siap kamu pesan sekarang
               </h2>
             </div>
             <div className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-              {filteredProducts.length} produk tampil
+              {filteredProducts.length} produk siap dipilih
             </div>
           </div>
 
@@ -379,7 +380,8 @@ function Storefront() {
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
-              Belum ada produk published yang cocok dengan pencarian.
+              Belum ada produk yang cocok dengan pencarian atau kategori
+              pilihan.
             </div>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -419,7 +421,7 @@ function Storefront() {
                             : "text-amber-600"
                         }`}
                       >
-                        Stok {product.stock ?? 0}
+                        Tersedia {product.stock ?? 0}
                       </span>
                     </div>
                     <h3 className="mt-4 text-xl font-semibold text-slate-950">
@@ -427,7 +429,7 @@ function Storefront() {
                     </h3>
                     <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
                       {product.description ||
-                        `Produk siap tampil di katalog ${storeName}.`}
+                        `Pilihan menarik dari ${storeName} yang siap kamu pesan hari ini.`}
                     </p>
                     <div className="mt-5 flex items-end justify-between gap-3">
                       <div>
@@ -447,7 +449,7 @@ function Storefront() {
                         }}
                         className="shrink-0 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
                       >
-                        Tambah
+                        Pesan Sekarang
                       </button>
                     </div>
                   </div>
