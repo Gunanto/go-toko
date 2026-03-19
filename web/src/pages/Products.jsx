@@ -771,6 +771,17 @@ function Products() {
     };
   }, [token, logout, flash]);
 
+  useEffect(() => {
+    if (!isModalOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isModalOpen]);
+
   return (
     <>
       <PageHeader
@@ -892,227 +903,232 @@ function Products() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-soft-xl dark:bg-slate-950">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingId ? "Edit Produk" : "Tambah Produk"}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 px-4 py-6">
+          <div className="flex min-h-full items-start justify-center sm:items-center">
+            <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-soft-xl dark:bg-slate-950">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {editingId ? "Edit Produk" : "Tambah Produk"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Tutup
+                </button>
+              </div>
+              <form
+                className="mt-4 max-h-[calc(100vh-8rem)] space-y-3 overflow-y-auto pr-1"
+                onSubmit={handleSubmit}
               >
-                Tutup
-              </button>
-            </div>
-            <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                  Nama Produk
-                </label>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                  placeholder="Kopi Susu 1L"
-                  required
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Slug
+                    Nama Produk
                   </label>
                   <input
-                    name="slug"
-                    value={form.slug}
+                    name="name"
+                    value={form.name}
                     onChange={handleChange}
                     className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="kopi-susu-1l"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    SKU (Otomatis)
-                  </label>
-                  <input
-                    name="sku"
-                    value={form.sku}
-                    onChange={handleChange}
-                    readOnly
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="Dibuat otomatis"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Kategori
-                  </label>
-                  <input
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="Minuman"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                  Deskripsi
-                </label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  rows={4}
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                  placeholder="Deskripsi singkat untuk halaman admin dan katalog."
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                  Gambar (URL)
-                </label>
-                <input
-                  name="image"
-                  value={form.image}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                  placeholder={placeholderImage}
-                />
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      className="hidden"
-                      onChange={handleUploadSingleImage}
-                      disabled={uploadingImage}
-                    />
-                    {uploadingImage ? "Mengupload..." : "Upload ke MinIO"}
-                  </label>
-                  <span className="text-xs text-gray-500 dark:text-slate-400">
-                    Bisa tetap isi URL manual jika diperlukan.
-                  </span>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                  Gallery Images
-                </label>
-                <textarea
-                  name="gallery"
-                  value={form.gallery}
-                  onChange={handleChange}
-                  rows={3}
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                  placeholder={"Satu URL per baris\nhttps://...\nhttps://..."}
-                />
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      multiple
-                      className="hidden"
-                      onChange={handleUploadGalleryImages}
-                      disabled={uploadingGallery}
-                    />
-                    {uploadingGallery
-                      ? "Mengupload Gallery..."
-                      : "Upload Gallery ke MinIO"}
-                  </label>
-                  <span className="text-xs text-gray-500 dark:text-slate-400">
-                    URL hasil upload akan ditambahkan otomatis satu per baris.
-                  </span>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Stok
-                  </label>
-                  <input
-                    name="stock"
-                    value={form.stock}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="0"
-                    type="number"
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Harga Jual
-                  </label>
-                  <input
-                    name="price"
-                    value={form.price}
-                    onChange={handleChange}
-                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="78000"
+                    placeholder="Kopi Susu 1L"
                     required
                   />
                 </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      Slug
+                    </label>
+                    <input
+                      name="slug"
+                      value={form.slug}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="kopi-susu-1l"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      SKU (Otomatis)
+                    </label>
+                    <input
+                      name="sku"
+                      value={form.sku}
+                      onChange={handleChange}
+                      readOnly
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="Dibuat otomatis"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      Kategori
+                    </label>
+                    <input
+                      name="category"
+                      value={form.category}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="Minuman"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Harga Pokok
+                    Deskripsi
                   </label>
-                  <input
-                    name="cost"
-                    value={form.cost}
+                  <textarea
+                    name="description"
+                    value={form.description}
                     onChange={handleChange}
+                    rows={4}
                     className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="50000"
+                    placeholder="Deskripsi singkat untuk halaman admin dan katalog."
                   />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                    Promo Label
+                    Gambar (URL)
                   </label>
                   <input
-                    name="promoLabel"
-                    value={form.promoLabel}
+                    name="image"
+                    value={form.image}
                     onChange={handleChange}
                     className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="Best Seller"
+                    placeholder={placeholderImage}
                   />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleUploadSingleImage}
+                        disabled={uploadingImage}
+                      />
+                      {uploadingImage ? "Mengupload..." : "Upload ke MinIO"}
+                    </label>
+                    <span className="text-xs text-gray-500 dark:text-slate-400">
+                      Bisa tetap isi URL manual jika diperlukan.
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                  Status Publikasi
-                </label>
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                    Gallery Images
+                  </label>
+                  <textarea
+                    name="gallery"
+                    value={form.gallery}
+                    onChange={handleChange}
+                    rows={3}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                    placeholder={"Satu URL per baris\nhttps://...\nhttps://..."}
+                  />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        multiple
+                        className="hidden"
+                        onChange={handleUploadGalleryImages}
+                        disabled={uploadingGallery}
+                      />
+                      {uploadingGallery
+                        ? "Mengupload Gallery..."
+                        : "Upload Gallery ke MinIO"}
+                    </label>
+                    <span className="text-xs text-gray-500 dark:text-slate-400">
+                      URL hasil upload akan ditambahkan otomatis satu per baris.
+                    </span>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      Stok
+                    </label>
+                    <input
+                      name="stock"
+                      value={form.stock}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="0"
+                      type="number"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      Harga Jual
+                    </label>
+                    <input
+                      name="price"
+                      value={form.price}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="78000"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      Harga Pokok
+                    </label>
+                    <input
+                      name="cost"
+                      value={form.cost}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="50000"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                      Promo Label
+                    </label>
+                    <input
+                      name="promoLabel"
+                      value={form.promoLabel}
+                      onChange={handleChange}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="Best Seller"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                    Status Publikasi
+                  </label>
+                  <select
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="mt-2 w-full rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-soft-xl hover:bg-cyan-700"
                 >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-2 w-full rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white shadow-soft-xl hover:bg-cyan-700"
-              >
-                {saving
-                  ? "Menyimpan..."
-                  : editingId
-                    ? "Simpan Perubahan"
-                    : "Simpan Produk"}
-              </button>
-            </form>
+                  {saving
+                    ? "Menyimpan..."
+                    : editingId
+                      ? "Simpan Perubahan"
+                      : "Simpan Produk"}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
