@@ -1,64 +1,119 @@
 # Next Session Notes
 
-## Current State
+## Status Terakhir
+- Commit terbaru: `1032214` `chore: prepare production proxy setup for gezy domain`
+- Branch aktif: `main`
+- Remote push terakhir: berhasil ke `origin/main`
+- Deploy production ke VPS sudah dijalankan dari folder `~/gezy`
+- Domain `https://gezy.my.id` sudah aktif dengan SSL Let's Encrypt
 
-- Storefront checkout now creates orders in backend via `POST /v1/store/orders`.
-- Orders now persist explicit `status` values: `pending` or `paid`.
-- Storefront orders are created as `pending`.
-- POS/manual orders are created as `paid`.
-- Admin can mark pending orders as paid from:
-  - `web/src/pages/OrderDetail.jsx`
-  - `web/src/pages/Orders.jsx`
-- Migration `000015_add_status_to_orders` has already been applied locally (`migrate ... up` returned `no change`).
+## Konteks Deployment Production
+- Domain target: `gezy.my.id`
+- Reverse proxy publik yang sudah berjalan di VPS: `sims_nginx`
+- Network Docker publik yang sudah ada di VPS: `sims_edge`
+- Network internal app `go-toko` tetap terpisah agar database dan Redis tidak terekspos
 
-## Verified
+## Keputusan Arsitektur
+- `sims_nginx` tetap menjadi entrypoint publik pada port `80/443`
+- `go-toko-web` tidak publish port host
+- `go-toko-web` join ke network eksternal `sims_edge`
+- `go-toko-app`, `go-toko-postgres`, dan `go-toko-redis` hanya berjalan di network internal
+- `postgres` dan `redis` tidak membuka port ke host publik
 
-- `go test ./...` passed
-- `cd web && npm run lint` passed
+## File Yang Sudah Disiapkan
+- [docker-compose.prod.yml](/home/pgun/dev/go-toko/docker-compose.prod.yml)
+- [.env.production.example](/home/pgun/dev/go-toko/.env.production.example)
+- [docs/gezy.my.id.nginx.conf](/home/pgun/dev/go-toko/docs/gezy.my.id.nginx.conf)
 
-## Good Next Steps
+## Isi Perubahan Penting
+- `docker-compose.prod.yml`
+  - `web` memakai image GHCR dan join ke `sims_edge`
+  - `app`, `postgres`, `redis` tetap internal-only
+  - `edge` dideklarasikan sebagai external network
+- `.env.production.example`
+  - domain default diarahkan ke `https://gezy.my.id`
+  - `EDGE_NETWORK` default: `sims_edge`
+- `docs/gezy.my.id.nginx.conf`
+  - contoh server block nginx untuk proxy `gezy.my.id` ke `go-toko-web:80`
 
-### 1. Add explicit order channel
+## Langkah Deploy Di VPS
+1. Pull repo terbaru
+2. Buat `.env.production` dari `.env.production.example`
+3. Isi secret yang wajib:
+   - `DB_PASSWORD`
+   - `TOKEN_KEY_HEX`
+   - kredensial Google OAuth jika dipakai
+4. Jalankan:
 
-Problem:
-- UI currently infers channel mostly from payment label.
-- There is no explicit `channel` field such as `storefront`, `pos`, or `manual`.
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+```
 
-Suggested work:
-- Add `channel` to `domain.Order`
-- Add DB migration for `orders.channel`
-- Set `channel = storefront` in `CreateStoreOrder`
-- Set `channel = pos` for cashier flow and `manual` if needed for admin-created orders
-- Expose it in `orderResponse`
-- Show it in `Orders.jsx` and `OrderDetail.jsx`
+5. Tambahkan server block dari [docs/gezy.my.id.nginx.conf](/home/pgun/dev/go-toko/docs/gezy.my.id.nginx.conf) ke konfigurasi `sims_nginx`
 
-### 2. Support manual paid amount when paying pending orders
+## Kondisi VPS Yang Sudah Terkonfirmasi
+- Port publik yang sedang dipakai:
+  - `80`
+  - `443`
+  - `22`
+- `8080` kosong, tetapi untuk setup final tidak dipakai lagi
+- Container `sims_nginx` sudah join ke:
+  - `sims_edge`
+  - `sims_internal`
+- Folder deploy app production:
+  - `~/gezy`
+- Container production `go-toko` yang aktif:
+  - `go-toko-web`
+  - `go-toko-app`
+  - `go-toko-postgres`
+  - `go-toko-redis`
 
-Problem:
-- Current pay action always sends full `total_price`.
-- No UI for partial/actual payment input.
+## Konfigurasi Production Yang Sudah Aktif di VPS
+- Repo `go-toko` sudah di-clone ke `~/gezy` pada commit `1032214`
+- File env production aktif:
+  - `~/gezy/.env.production`
+- `go-toko-web` sudah join ke network:
+  - `gezy_backend`
+  - `sims_edge`
+- Reverse proxy `sims_nginx` sudah memiliki HTTP dan HTTPS server block untuk `gezy.my.id`
+- Sertifikat aktif untuk `gezy.my.id`:
+  - issuer: `Let's Encrypt R12`
+  - berlaku sampai `2026-06-17`
+- Lokasi sertifikat yang dipakai `sims_nginx`:
+  - `/home/pakgun/sims/docker/nginx/ssl/gezy.my.id/fullchain.pem`
+  - `/home/pakgun/sims/docker/nginx/ssl/gezy.my.id/privkey.pem`
 
-Suggested work:
-- Add input/modal for `total_paid` in `Orders.jsx` and `OrderDetail.jsx`
-- Reuse existing `PUT /v1/orders/:id/pay`
-- Keep validation in service:
-  - reject if `total_paid < total_price`
-  - reject if order already `paid`
+## Otomasi Renew SSL
+- Certbot issuance memakai webroot:
+  - `/home/pakgun/certbot/www`
+- Renewal config:
+  - `/home/pakgun/certbot/conf/renewal/gezy.my.id.conf`
+- Deploy hook otomatis sudah dipasang:
+  - `/home/pakgun/certbot/conf/renewal-hooks/deploy/gezy-my-id-sync.sh`
+- Hook renew akan:
+  - copy cert terbaru ke folder SSL `sims_nginx`
+  - menjalankan `nginx -t`
+  - reload `sims_nginx`
 
-## Important Files
+## Hasil Verifikasi Terakhir
+- `https://gezy.my.id` merespons `200 OK`
+- Sertifikat live:
+  - `CN = gezy.my.id`
+  - issuer: `Let's Encrypt R12`
+- Response root menampilkan frontend `go-toko-web`
 
-- `internal/core/service/order.go`
-- `internal/adapter/storage/postgres/repository/order.go`
-- `internal/adapter/handler/http/order.go`
-- `internal/adapter/handler/http/router.go`
-- `internal/adapter/handler/http/response.go`
-- `web/src/lib/api.js`
-- `web/src/pages/StoreCart.jsx`
-- `web/src/pages/Orders.jsx`
-- `web/src/pages/OrderDetail.jsx`
+## GHCR
+- Workflow publish image sudah disiapkan di [publish-image.yaml](/home/pgun/dev/go-toko/.github/workflows/publish-image.yaml)
+- Image target:
+  - `ghcr.io/gunanto/go-toko-app`
+  - `ghcr.io/gunanto/go-toko-web`
+- Trigger:
+  - push ke `main`
+  - tag `v*`
+  - manual `workflow_dispatch`
 
-## Notes
-
-- Public storefront payments are loaded from `GET /v1/store/payments`.
-- Storefront checkout currently uses the first internal `cashier` or `admin` user as fallback `UserID` for order creation.
-- If that fallback becomes a problem, introduce a dedicated system/storefront user strategy instead of relying on first-match user selection.
+## Next Action Yang Paling Relevan
+1. Tambahkan catatan operasional untuk proses renew SSL dan deploy production ke dokumentasi utama bila perlu
+2. Verifikasi endpoint aplikasi penting di production (`/`, auth, API store) lewat browser/manual smoke test
+3. Jika ingin memakai Cloudflare proxy, ubah record dari `DNS only` ke `Proxied` setelah memastikan perilaku origin sudah stabil
+4. Siapkan prosedur update image tag selain `main` bila nanti mau pakai versi release/tag
