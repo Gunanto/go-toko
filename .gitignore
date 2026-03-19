@@ -19,3 +19,9 @@ log/
 *.test
 *.out
 coverage*
+
+# local notes and import assets
+docs/next-session-notes.md
+docs/gezyproduk.csv
+docs/minio/
+docs/product-import-template.csv
