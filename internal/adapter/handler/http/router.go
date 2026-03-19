@@ -120,7 +120,6 @@ func NewRouter(
 		}
 		user := v1.Group("/users")
 		{
-			user.POST("", userHandler.Register)
 			user.POST("/login", authHandler.Login)
 
 			authUser := user.Group("/")
@@ -131,6 +130,7 @@ func NewRouter(
 				admin := authUser.Group("/")
 				admin.Use(adminMiddleware())
 				{
+					admin.POST("", userHandler.Register)
 					admin.GET("", userHandler.ListUsers)
 					admin.GET("/:id", userHandler.GetUser)
 					admin.PUT("/:id", userHandler.UpdateUser)

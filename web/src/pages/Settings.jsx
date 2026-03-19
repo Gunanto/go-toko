@@ -303,6 +303,7 @@ function Settings() {
           userForm.username.trim(),
           userForm.email.trim(),
           userForm.password.trim(),
+          { token },
         );
         const createdUser = created?.data;
         if (userForm.role === "admin" && createdUser?.id) {

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { fetchMe, login as loginApi, registerUser } from "../lib/api";
+import { fetchMe, login as loginApi } from "../lib/api";
 
 const AuthContext = createContext(null);
 
@@ -24,15 +24,6 @@ export function AuthProvider({ children }) {
       localStorage.setItem(storageKey, accessToken);
       setToken(accessToken);
       return response;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (name, username, email, password) => {
-    setLoading(true);
-    try {
-      return await registerUser(name, username, email, password);
     } finally {
       setLoading(false);
     }
@@ -81,7 +72,6 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       loading,
       login,
-      register,
       logout,
     }),
     [token, user, isAuthenticated, loading],

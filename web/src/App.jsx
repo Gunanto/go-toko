@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import AppLayout from "./layouts/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Pos from "./pages/Pos";
@@ -12,7 +12,6 @@ import Inventory from "./pages/Inventory";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Storefront from "./pages/Storefront";
 import StoreProduct from "./pages/StoreProduct";
 import StoreCart from "./pages/StoreCart";
@@ -28,7 +27,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="/" element={<Storefront />} />
         <Route path="/store" element={<Storefront />} />
         <Route path="/store/login" element={<StoreLogin />} />

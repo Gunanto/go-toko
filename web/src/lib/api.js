@@ -29,9 +29,16 @@ export async function login(username, password) {
   });
 }
 
-export async function registerUser(name, username, email, password) {
+export async function registerUser(
+  name,
+  username,
+  email,
+  password,
+  { token } = {},
+) {
   return request("/users", {
     method: "POST",
+    token,
     body: JSON.stringify({ name, username, email, password }),
   });
 }
