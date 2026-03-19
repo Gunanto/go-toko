@@ -5,8 +5,6 @@ services:
     restart: unless-stopped
     depends_on:
       - app
-    ports:
-      - "${WEB_BIND:-127.0.0.1:8080}:80"
     networks:
       - edge
       - backend
@@ -89,7 +87,8 @@ services:
 
 networks:
   edge:
-    driver: bridge
+    external: true
+    name: "${EDGE_NETWORK:-sims_edge}"
   backend:
     driver: bridge
     internal: true
