@@ -35,11 +35,11 @@ function StoreHeaderActions({
   }).format(now);
 
   return (
-    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:justify-end">
+    <div className="grid w-full grid-cols-[auto,1fr,auto,auto,auto] items-center gap-2 sm:flex sm:w-auto sm:items-center sm:justify-end">
       <button
         type="button"
         onClick={toggleTheme}
-        className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
         aria-label={
           theme === "dark" ? "Beralih ke mode terang" : "Beralih ke mode gelap"
         }
@@ -79,8 +79,8 @@ function StoreHeaderActions({
           </span>
         </span>
       </button>
-      <div className="col-span-2 rounded-[1.2rem] border border-slate-200 bg-white px-4 py-2 text-center sm:col-span-1 sm:text-left dark:border-slate-700 dark:bg-slate-900">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+      <div className="min-w-0 rounded-[1rem] border border-slate-200 bg-white px-3 py-2 text-left dark:border-slate-700 dark:bg-slate-900 sm:px-4">
+        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400 sm:text-[11px] sm:tracking-[0.2em]">
           {dayDate}
         </p>
         <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -90,7 +90,7 @@ function StoreHeaderActions({
       {showHome ? (
         <Link
           to={homeTo}
-          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
           aria-label={homeLabel}
         >
           <span className="inline-flex items-center justify-center gap-2">
@@ -119,7 +119,7 @@ function StoreHeaderActions({
       {showStatus ? (
         <Link
           to="/store/orders/status"
-          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
           aria-label="Cek Status"
         >
           <span className="inline-flex items-center justify-center gap-2">
@@ -153,7 +153,7 @@ function StoreHeaderActions({
             ? "/store/account"
             : "/store/login?redirect=/store/account"
         }
-        className="rounded-full border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
         aria-label={isAuthenticated ? "Akun" : "Masuk"}
       >
         <span className="inline-flex items-center justify-center gap-2">
@@ -177,7 +177,7 @@ function StoreHeaderActions({
       {showCart ? (
         <Link
           to="/store/cart"
-          className="rounded-full bg-slate-950 px-4 py-2 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 dark:bg-sky-500 dark:text-slate-950"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-950 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 dark:bg-sky-500 dark:text-slate-950 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
           aria-label={cartCount > 0 ? `Keranjang (${cartCount})` : "Keranjang"}
         >
           <span className="inline-flex items-center justify-center gap-2">
