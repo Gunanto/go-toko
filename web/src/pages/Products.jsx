@@ -106,6 +106,7 @@ function Products() {
     promoLabel: "",
   });
   const fileInputRef = useRef(null);
+  const categoryLookupRef = useRef(new Map());
   const isAdmin = user?.role === "admin";
 
   const flash = useCallback((type, message) => {
@@ -160,6 +161,10 @@ function Products() {
     });
     return map;
   }, [categories]);
+
+  useEffect(() => {
+    categoryLookupRef.current = new Map(categoryNameToId);
+  }, [categoryNameToId]);
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -254,12 +259,14 @@ function Products() {
       return null;
     }
     const normalized = name.trim() || "Umum";
-    const cached = categoryNameToId.get(normalized.toLowerCase());
+    const key = normalized.toLowerCase();
+    const cached = categoryLookupRef.current.get(key);
     if (cached) return cached;
     try {
       const response = await createCategory(normalized, { token });
       const created = response?.data;
       if (created?.id) {
+        categoryLookupRef.current.set(key, created.id);
         setCategories((prev) => [...prev, created]);
         return created.id;
       }
