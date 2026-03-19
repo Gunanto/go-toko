@@ -608,6 +608,7 @@ function Products() {
           category_id: categoryId,
           name: row.name,
           image: row.image || placeholderImage,
+          gallery_images: [],
           price: row.price,
           cost: row.cost,
           stock: row.stock,
