@@ -7,6 +7,7 @@ import {
   loginStoreCustomer,
   registerStoreCustomer,
 } from "../lib/api";
+import { setCartScope } from "../lib/storeCart";
 
 const StoreAuthContext = createContext(null);
 const storageKey = "go_toko_store_token";
@@ -45,7 +46,11 @@ export function StoreAuthProvider({ children }) {
       }
       localStorage.setItem(storageKey, accessToken);
       setToken(accessToken);
-      setCustomer(response?.data?.customer ?? null);
+      const nextCustomer = response?.data?.customer ?? null;
+      setCustomer(nextCustomer);
+      if (nextCustomer?.id) {
+        setCartScope(`customer:${nextCustomer.id}`);
+      }
       return response;
     } finally {
       setLoading(false);
@@ -56,6 +61,7 @@ export function StoreAuthProvider({ children }) {
     localStorage.removeItem(storageKey);
     setToken(null);
     setCustomer(null);
+    setCartScope("guest");
   };
 
   const consumeToken = (accessToken) => {
@@ -83,6 +89,7 @@ export function StoreAuthProvider({ children }) {
     let isMounted = true;
     if (!token) {
       setCustomer(null);
+      setCartScope("guest");
       return () => {
         isMounted = false;
       };
@@ -106,6 +113,17 @@ export function StoreAuthProvider({ children }) {
       isMounted = false;
     };
   }, [token]);
+
+  useEffect(() => {
+    if (customer?.id) {
+      setCartScope(`customer:${customer.id}`);
+      return;
+    }
+
+    if (!token) {
+      setCartScope("guest");
+    }
+  }, [customer?.id, token]);
 
   const value = useMemo(
     () => ({

@@ -1,19 +1,67 @@
-const storageKey = "gezy_store_cart";
+const legacyStorageKey = "gezy_store_cart";
+const storageKeyPrefix = "gezy_store_cart:";
+const scopeStorageKey = "gezy_store_cart_scope";
+const defaultScope = "guest";
 
-function readCart() {
+function getScopedStorageKey(scope = defaultScope) {
+  return `${storageKeyPrefix}${scope}`;
+}
+
+function getCurrentScope() {
+  if (typeof window === "undefined") return defaultScope;
+  return window.localStorage.getItem(scopeStorageKey) || defaultScope;
+}
+
+function migrateLegacyCartIfNeeded() {
+  if (typeof window === "undefined") return;
+
+  const legacyValue = window.localStorage.getItem(legacyStorageKey);
+  if (!legacyValue) return;
+
+  const guestKey = getScopedStorageKey(defaultScope);
+  if (!window.localStorage.getItem(guestKey)) {
+    window.localStorage.setItem(guestKey, legacyValue);
+  }
+  window.localStorage.removeItem(legacyStorageKey);
+}
+
+function readCart(scope = getCurrentScope()) {
   if (typeof window === "undefined") return [];
+
+  migrateLegacyCartIfNeeded();
+
   try {
-    const value = window.localStorage.getItem(storageKey);
+    const value = window.localStorage.getItem(getScopedStorageKey(scope));
     return value ? JSON.parse(value) : [];
   } catch {
     return [];
   }
 }
 
-function writeCart(items) {
+function writeCart(items, scope = getCurrentScope()) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(storageKey, JSON.stringify(items));
-  window.dispatchEvent(new CustomEvent("store-cart-updated"));
+
+  window.localStorage.setItem(
+    getScopedStorageKey(scope),
+    JSON.stringify(items),
+  );
+  window.dispatchEvent(
+    new CustomEvent("store-cart-updated", { detail: { scope } }),
+  );
+}
+
+export function setCartScope(scope = defaultScope) {
+  if (typeof window === "undefined") return;
+
+  migrateLegacyCartIfNeeded();
+
+  const normalizedScope = scope || defaultScope;
+  window.localStorage.setItem(scopeStorageKey, normalizedScope);
+  window.dispatchEvent(
+    new CustomEvent("store-cart-updated", {
+      detail: { scope: normalizedScope, scopeChanged: true },
+    }),
+  );
 }
 
 export function getCartItems() {
