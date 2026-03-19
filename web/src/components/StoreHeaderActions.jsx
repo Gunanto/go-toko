@@ -74,7 +74,9 @@ function StoreHeaderActions({
               </svg>
             )}
           </span>
-          <span>{theme === "dark" ? "Terang" : "Gelap"}</span>
+          <span className="hidden sm:inline">
+            {theme === "dark" ? "Terang" : "Gelap"}
+          </span>
         </span>
       </button>
       <div className="col-span-2 rounded-[1.2rem] border border-slate-200 bg-white px-4 py-2 text-center sm:col-span-1 sm:text-left dark:border-slate-700 dark:bg-slate-900">
@@ -89,16 +91,60 @@ function StoreHeaderActions({
         <Link
           to={homeTo}
           className="rounded-full border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          aria-label={homeLabel}
         >
-          {homeLabel}
+          <span className="inline-flex items-center justify-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-4 w-4 stroke-current"
+            >
+              <path
+                d="M3 10.5 12 3l9 7.5"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M5.25 9.75v9.75h13.5V9.75"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="hidden sm:inline">{homeLabel}</span>
+          </span>
         </Link>
       ) : null}
       {showStatus ? (
         <Link
           to="/store/orders/status"
           className="rounded-full border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          aria-label="Cek Status"
         >
-          Cek Status
+          <span className="inline-flex items-center justify-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-4 w-4 stroke-current"
+            >
+              <path
+                d="M12 6v6l3.75 2.25"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="8.25"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="hidden sm:inline">Cek Status</span>
+          </span>
         </Link>
       ) : null}
       <Link
@@ -108,15 +154,70 @@ function StoreHeaderActions({
             : "/store/login?redirect=/store/account"
         }
         className="rounded-full border border-slate-200 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        aria-label={isAuthenticated ? "Akun" : "Masuk"}
       >
-        {isAuthenticated ? "Akun" : "Masuk"}
+        <span className="inline-flex items-center justify-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-4 w-4 stroke-current"
+          >
+            <path
+              d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2.25c-3.451 0-6.25 1.959-6.25 4.375V20h12.5v-1.375c0-2.416-2.799-4.375-6.25-4.375Z"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="hidden sm:inline">
+            {isAuthenticated ? "Akun" : "Masuk"}
+          </span>
+        </span>
       </Link>
       {showCart ? (
         <Link
           to="/store/cart"
           className="rounded-full bg-slate-950 px-4 py-2 text-center text-sm font-semibold text-white transition hover:-translate-y-0.5 dark:bg-sky-500 dark:text-slate-950"
+          aria-label={cartCount > 0 ? `Keranjang (${cartCount})` : "Keranjang"}
         >
-          Keranjang {cartCount > 0 ? `(${cartCount})` : ""}
+          <span className="inline-flex items-center justify-center gap-2">
+            <span className="relative inline-flex h-4 w-4 items-center justify-center">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-4 w-4 stroke-current"
+              >
+                <path
+                  d="M3.75 5.25h1.5l1.5 9h10.5l1.5-6.75H6.375"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="9.25"
+                  cy="18.25"
+                  r="1.25"
+                  fill="currentColor"
+                  stroke="none"
+                />
+                <circle
+                  cx="16.75"
+                  cy="18.25"
+                  r="1.25"
+                  fill="currentColor"
+                  stroke="none"
+                />
+              </svg>
+              {cartCount > 0 ? (
+                <span className="absolute -right-2 -top-2 min-w-[1rem] rounded-full bg-amber-300 px-1 py-0.5 text-[9px] font-bold leading-none text-slate-950 dark:bg-slate-950 dark:text-sky-300 sm:hidden">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              ) : null}
+            </span>
+            <span className="hidden sm:inline">
+              Keranjang {cartCount > 0 ? `(${cartCount})` : ""}
+            </span>
+          </span>
         </Link>
       ) : null}
     </div>
