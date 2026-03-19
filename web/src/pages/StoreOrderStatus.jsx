@@ -90,8 +90,8 @@ function StoreOrderStatus() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_18%),radial-gradient(circle_at_top_right,_#bfdbfe,_transparent_25%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_45%,_#eff6ff_100%)] text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_18%),radial-gradient(circle_at_top_right,_#bfdbfe,_transparent_25%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_45%,_#eff6ff_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.12),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_50%,_#111827_100%)] dark:text-slate-100">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <div className="flex items-center gap-3">
             <img
@@ -103,7 +103,7 @@ function StoreOrderStatus() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700 sm:text-sm sm:tracking-[0.24em]">
                 Status Pesanan
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Pantau status pesananmu kapan saja dengan kode pesanan.
               </p>
             </div>

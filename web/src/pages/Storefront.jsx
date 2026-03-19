@@ -116,8 +116,8 @@ function Storefront() {
     settings?.store_contact?.trim() || "Kontak toko belum tersedia.";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_22%),radial-gradient(circle_at_top_right,_#bae6fd,_transparent_28%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_42%,_#eff6ff_100%)] text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_22%),radial-gradient(circle_at_top_right,_#bae6fd,_transparent_28%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_42%,_#eff6ff_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_55%,_#111827_100%)] dark:text-slate-100">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
@@ -129,7 +129,9 @@ function Storefront() {
               <p className="truncate text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700 sm:text-sm sm:tracking-[0.28em]">
                 Marketplace Storefront
               </p>
-              <p className="truncate text-sm text-slate-500">{storeName}</p>
+              <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                {storeName}
+              </p>
             </div>
           </div>
           <StoreHeaderActions cartCount={cartCount} />

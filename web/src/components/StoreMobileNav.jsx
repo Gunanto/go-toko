@@ -90,8 +90,8 @@ function StoreMobileNav() {
   }, []);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-3 py-3 backdrop-blur-xl sm:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-[1.4rem] bg-slate-100/90 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-3 py-3 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/95 sm:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-3 gap-2 rounded-[1.4rem] bg-slate-100/90 p-2 shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:bg-slate-900/90 dark:shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -101,8 +101,8 @@ function StoreMobileNav() {
               const active = isActive || item.match(location.pathname);
               return `flex flex-col items-center gap-1 rounded-[1rem] px-3 py-2 text-[11px] font-semibold transition ${
                 active
-                  ? "bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)]"
-                  : "text-slate-500"
+                  ? "bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)] dark:bg-sky-500 dark:text-slate-950"
+                  : "text-slate-500 dark:text-slate-400"
               }`;
             }}
           >
