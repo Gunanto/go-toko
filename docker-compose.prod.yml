@@ -1,0 +1,99 @@
+services:
+  web:
+    image: ghcr.io/gunanto/go-toko-web:${WEB_IMAGE_TAG:-main}
+    container_name: go-toko-web
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "${WEB_BIND:-127.0.0.1:8080}:80"
+    networks:
+      - edge
+      - backend
+
+  app:
+    image: ghcr.io/gunanto/go-toko-app:${APP_IMAGE_TAG:-main}
+    container_name: go-toko-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_NAME: "${APP_NAME:-go-toko}"
+      APP_ENV: "production"
+      HTTP_URL: "0.0.0.0"
+      HTTP_PORT: "8082"
+      HTTP_ALLOWED_ORIGINS: "${HTTP_ALLOWED_ORIGINS}"
+      DB_CONNECTION: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      REDIS_ADDR: "redis:6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+      TOKEN_DURATION: "${TOKEN_DURATION:-15m}"
+      TOKEN_KEY_HEX: "${TOKEN_KEY_HEX}"
+      STORE_GOOGLE_CLIENT_ID: "${STORE_GOOGLE_CLIENT_ID:-}"
+      STORE_GOOGLE_CLIENT_SECRET: "${STORE_GOOGLE_CLIENT_SECRET:-}"
+      STORE_GOOGLE_REDIRECT_URL: "${STORE_GOOGLE_REDIRECT_URL:-}"
+      STORE_GOOGLE_FRONTEND_REDIRECT: "${STORE_GOOGLE_FRONTEND_REDIRECT:-}"
+    expose:
+      - "8082"
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: go-toko-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "5432"
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    container_name: go-toko-redis
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+    command:
+      - /bin/sh
+      - -c
+      - exec redis-server --appendonly yes $${REDIS_PASSWORD:+--requirepass "$${REDIS_PASSWORD}"}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "6379"
+    networks:
+      - backend
+
+networks:
+  edge:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:
