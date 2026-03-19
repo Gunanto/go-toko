@@ -262,12 +262,12 @@ function Storefront() {
           </div>
         ) : null}
 
-        <section className="mt-8 grid gap-4 lg:grid-cols-[0.9fr,1.1fr]">
-          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-5 shadow-soft-xl sm:p-6">
+        <section className="mt-8 grid gap-4 lg:grid-cols-[0.76fr,1.24fr] lg:items-start">
+          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-5 shadow-soft-xl sm:p-6 lg:self-start">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">
               Belanja Lebih Mudah
             </p>
-            <div className="mt-5 grid gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               {[
                 "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
                 "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
@@ -275,12 +275,12 @@ function Storefront() {
               ].map((item, index) => (
                 <div
                   key={item}
-                  className="flex items-start gap-4 rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4"
+                  className="flex items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white">
                     {index + 1}
                   </div>
-                  <p className="text-sm leading-6 text-slate-600">{item}</p>
+                  <p className="text-sm leading-5 text-slate-600">{item}</p>
                 </div>
               ))}
             </div>
