@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { getStoreOrderByReceipt } from "../lib/api";
+import { Link, useSearchParams } from "react-router-dom";
+import { fetchStoreSettings, getStoreOrderByReceipt } from "../lib/api";
 import logoCommerce from "../assets/logo-gezy-commerce-transparent.png";
 import StoreHeaderActions from "../components/StoreHeaderActions";
 import StoreMobileNav from "../components/StoreMobileNav";
+import { setCartItems } from "../lib/storeCart";
 
 function StoreOrderStatus() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +14,8 @@ function StoreOrderStatus() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [settings, setSettings] = useState(null);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("id-ID", {
@@ -50,6 +53,48 @@ function StoreOrderStatus() {
       summary: "Pesanan sudah diterima dan menunggu penyelesaian pembayaran.",
     };
   }, [order]);
+
+  const paymentFollowUpMessage = useMemo(() => {
+    if (!order?.receipt_id) return "";
+
+    const lines = [
+      `Halo, saya ingin melanjutkan pembayaran untuk pesanan ${order.receipt_id}.`,
+      `Nama: ${order.customer_name || "-"}`,
+      `Metode pembayaran: ${order.payment_type?.name || "-"}`,
+      `Total: ${formatCurrency(order.total_price)}`,
+    ];
+
+    if (order.customer_phone) {
+      lines.push(`No. telepon: ${order.customer_phone}`);
+    }
+
+    return lines.join("\n");
+  }, [order]);
+
+  const paymentHelpUrl = useMemo(() => {
+    const normalizedPhone =
+      settings?.store_contact?.replace(/[^\d]/g, "") || "";
+    if (!normalizedPhone || !paymentFollowUpMessage) return "";
+    return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(paymentFollowUpMessage)}`;
+  }, [paymentFollowUpMessage, settings?.store_contact]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchStoreSettings()
+      .then((response) => {
+        if (cancelled) return;
+        setSettings(response?.data || null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSettings(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const fetchOrder = async (nextReceiptCode) => {
     const normalized = nextReceiptCode.trim();
@@ -89,6 +134,29 @@ function StoreOrderStatus() {
     await fetchOrder(receiptCode);
   };
 
+  const handleBuyAgain = () => {
+    const nextItems = (order?.products || [])
+      .map((item) => ({
+        id: item.product?.id || item.product_id,
+        slug: item.product?.slug || "",
+        name: item.product?.name || `Produk #${item.product_id}`,
+        price: Number(item.price || item.product?.price || 0),
+        image: item.product?.image || "",
+        qty: Number(item.qty || 1),
+      }))
+      .filter((item) => item.id);
+
+    if (nextItems.length === 0) {
+      setNotice(
+        "Produk pada pesanan ini belum bisa dimasukkan lagi ke keranjang.",
+      );
+      return;
+    }
+
+    setCartItems(nextItems);
+    setNotice("Pesanan lama berhasil dimasukkan lagi ke keranjang.");
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_18%),radial-gradient(circle_at_top_right,_#bfdbfe,_transparent_25%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_45%,_#eff6ff_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.12),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_50%,_#111827_100%)] dark:text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
@@ -113,6 +181,11 @@ function StoreOrderStatus() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 pb-28 lg:px-8 lg:pb-8">
+        {notice ? (
+          <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {notice}
+          </div>
+        ) : null}
         <section className="overflow-hidden rounded-[2.2rem] border border-slate-200 bg-slate-950 text-white shadow-[0_30px_90px_rgba(15,23,42,0.16)]">
           <div className="grid gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:grid-cols-[1.05fr,0.95fr] lg:px-10 lg:py-10">
             <div>
@@ -234,6 +307,53 @@ function StoreOrderStatus() {
                   </p>
                 </div>
               </div>
+
+              {order.status !== "paid" ? (
+                <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 shadow-soft-xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
+                    Lanjutkan Pembayaran
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    Pesanan ini masih menunggu pembayaran. Simpan kode pesanan,
+                    lalu lanjutkan pembayaran melalui toko dengan metode yang
+                    sudah kamu pilih.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {paymentHelpUrl ? (
+                      <a
+                        href={paymentHelpUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white"
+                      >
+                        Hubungi Toko via WhatsApp
+                      </a>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            order.receipt_id || "",
+                          );
+                          setNotice("Kode pesanan berhasil disalin.");
+                        } catch {
+                          setNotice("Gagal menyalin kode pesanan.");
+                        }
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700"
+                    >
+                      Salin Kode Pesanan
+                    </button>
+                    <Link
+                      to="/store/cart"
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700"
+                    >
+                      Kembali ke Keranjang
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-soft-xl">
@@ -241,9 +361,18 @@ function StoreOrderStatus() {
                 <h3 className="text-xl font-semibold text-slate-950">
                   Ringkasan Pesanan
                 </h3>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
-                  {(order.products || []).length} item
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
+                    {(order.products || []).length} item
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleBuyAgain}
+                    className="rounded-full bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
+                  >
+                    Beli Lagi
+                  </button>
+                </div>
               </div>
               <div className="mt-4 space-y-3">
                 {(order.products || []).map((item) => (

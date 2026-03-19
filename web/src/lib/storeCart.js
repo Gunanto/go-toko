@@ -48,7 +48,9 @@ export function addToCart(product, qty = 1) {
 export function updateCartQty(productId, qty) {
   const items = readCart()
     .map((item) =>
-      item.id === productId ? { ...item, qty: Math.max(Number(qty || 1), 1) } : item,
+      item.id === productId
+        ? { ...item, qty: Math.max(Number(qty || 1), 1) }
+        : item,
     )
     .filter((item) => item.qty > 0);
   writeCart(items);
@@ -60,4 +62,21 @@ export function removeFromCart(productId) {
 
 export function clearCart() {
   writeCart([]);
+}
+
+export function setCartItems(items) {
+  const normalized = Array.isArray(items)
+    ? items
+        .map((item) => ({
+          id: Number(item.id || 0),
+          slug: item.slug || "",
+          name: item.name || "",
+          price: Number(item.price || 0),
+          image: item.image || "",
+          qty: Math.max(Number(item.qty || 1), 1),
+        }))
+        .filter((item) => item.id > 0 && item.name)
+    : [];
+
+  writeCart(normalized);
 }

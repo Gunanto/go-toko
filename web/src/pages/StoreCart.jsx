@@ -14,6 +14,7 @@ import {
   clearCart,
   getCartItems,
   removeFromCart,
+  setCartItems,
   updateCartQty,
 } from "../lib/storeCart";
 import StoreMobileNav from "../components/StoreMobileNav";
@@ -41,6 +42,7 @@ function StoreCart() {
   const [orderHistory, setOrderHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [expandedHistoryId, setExpandedHistoryId] = useState(null);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("id-ID", {
@@ -348,6 +350,32 @@ function StoreCart() {
     }
   };
 
+  const handleBuyAgain = (order) => {
+    const nextItems = (order?.products || [])
+      .map((item) => ({
+        id: item.product?.id || item.product_id,
+        slug: item.product?.slug || "",
+        name: item.product?.name || `Produk #${item.product_id}`,
+        price: Number(item.price || item.product?.price || 0),
+        image: item.product?.image || "",
+        qty: Number(item.qty || 1),
+      }))
+      .filter((item) => item.id);
+
+    if (nextItems.length === 0) {
+      flash("error", "Item pada pesanan lama tidak ditemukan.");
+      return;
+    }
+
+    setCartItems(nextItems);
+    setItems(getCartItems());
+    flash("success", "Isi pesanan lama dimasukkan lagi ke keranjang.");
+  };
+
+  const toggleHistoryDetail = (orderId) => {
+    setExpandedHistoryId((current) => (current === orderId ? null : orderId));
+  };
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,_#f8fafc_0%,_#ecfeff_35%,_#f8fafc_100%)] text-slate-900">
       <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur">
@@ -603,6 +631,60 @@ function StoreCart() {
                           <p className="mt-2 text-sm font-semibold text-slate-900">
                             {formatCurrency(order.total_price)}
                           </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleHistoryDetail(order.id)}
+                              className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                            >
+                              {expandedHistoryId === order.id
+                                ? "Sembunyikan Item"
+                                : "Lihat Item"}
+                            </button>
+                            <Link
+                              to={`/store/orders/status?receipt=${encodeURIComponent(order.receipt_id || "")}`}
+                              className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                            >
+                              Lihat Status
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleBuyAgain(order)}
+                              className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white"
+                            >
+                              Beli Lagi
+                            </button>
+                          </div>
+                          {expandedHistoryId === order.id ? (
+                            <div className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                              {(order.products || []).length > 0 ? (
+                                (order.products || []).map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className="flex items-start justify-between gap-3 text-xs"
+                                  >
+                                    <div>
+                                      <p className="font-semibold text-slate-800">
+                                        {item.product?.name ||
+                                          `Produk #${item.product_id}`}
+                                      </p>
+                                      <p className="mt-1 text-slate-500">
+                                        Qty {item.qty} •{" "}
+                                        {formatCurrency(item.price)}
+                                      </p>
+                                    </div>
+                                    <p className="font-semibold text-slate-900">
+                                      {formatCurrency(item.total_final_price)}
+                                    </p>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-xs text-slate-500">
+                                  Detail item untuk pesanan ini belum tersedia.
+                                </p>
+                              )}
+                            </div>
+                          ) : null}
                         </div>
                       ))
                     ) : (
