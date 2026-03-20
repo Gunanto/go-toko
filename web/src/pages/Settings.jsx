@@ -24,6 +24,8 @@ const initialForm = {
   tax_rate: "0",
   service_fee_name: "",
   service_fee_rate: "0",
+  purchase_discount_name: "Diskon Pembelian",
+  purchase_discount_rate: "0",
 };
 
 const initialUserForm = {
@@ -131,6 +133,9 @@ function Settings() {
           tax_rate: String(data.tax_rate ?? 0),
           service_fee_name: data.service_fee_name || "",
           service_fee_rate: String(data.service_fee_rate ?? 0),
+          purchase_discount_name:
+            data.purchase_discount_name || "Diskon Pembelian",
+          purchase_discount_rate: String(data.purchase_discount_rate ?? 0),
         });
       } catch (error) {
         if (!isMounted) return;
@@ -185,19 +190,25 @@ function Settings() {
     const storeContact = form.store_contact.trim();
     const taxName = form.tax_name.trim();
     const serviceFeeName = form.service_fee_name.trim();
+    const purchaseDiscountName = form.purchase_discount_name.trim();
     const taxRate =
       form.tax_rate.trim() === "" ? 0 : Number.parseFloat(form.tax_rate);
     const serviceFeeRate =
       form.service_fee_rate.trim() === ""
         ? 0
         : Number.parseFloat(form.service_fee_rate);
+    const purchaseDiscountRate =
+      form.purchase_discount_rate.trim() === ""
+        ? 0
+        : Number.parseFloat(form.purchase_discount_rate);
 
     if (
       !storeName ||
       !storeAddress ||
       !storeContact ||
       !taxName ||
-      !serviceFeeName
+      !serviceFeeName ||
+      !purchaseDiscountName
     ) {
       flash("error", "Semua field pengaturan wajib diisi.");
       return;
@@ -213,6 +224,18 @@ function Settings() {
       return;
     }
 
+    if (
+      !Number.isFinite(purchaseDiscountRate) ||
+      purchaseDiscountRate < 0 ||
+      purchaseDiscountRate > 100
+    ) {
+      flash(
+        "error",
+        "Diskon pembelian harus berupa angka antara 0 sampai 100.",
+      );
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -223,6 +246,8 @@ function Settings() {
         tax_rate: taxRate,
         service_fee_name: serviceFeeName,
         service_fee_rate: serviceFeeRate,
+        purchase_discount_name: purchaseDiscountName,
+        purchase_discount_rate: purchaseDiscountRate,
       };
       const response = await updateSettings(payload, { token });
       const data = response?.data || payload;
@@ -234,6 +259,10 @@ function Settings() {
         tax_rate: String(data.tax_rate ?? 0),
         service_fee_name: String(data.service_fee_name || ""),
         service_fee_rate: String(data.service_fee_rate ?? 0),
+        purchase_discount_name: String(
+          data.purchase_discount_name || "Diskon Pembelian",
+        ),
+        purchase_discount_rate: String(data.purchase_discount_rate ?? 0),
       });
       flash("success", "Pengaturan berhasil disimpan.");
     } catch (error) {
@@ -604,10 +633,40 @@ function Settings() {
                 </div>
               </div>
 
+              <div className="rounded-xl border border-gray-100 px-4 py-3 dark:border-slate-800">
+                <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white">
+                  Diskon Pembelian Global
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    name="purchase_discount_name"
+                    value={form.purchase_discount_name}
+                    onChange={handleChange}
+                    disabled={loading || !isAdmin}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  />
+                  <input
+                    type="number"
+                    name="purchase_discount_rate"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={form.purchase_discount_rate}
+                    onChange={handleChange}
+                    disabled={loading || !isAdmin}
+                    className="w-28 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  />
+                  <span className="text-sm text-gray-500 dark:text-slate-400">
+                    %
+                  </span>
+                </div>
+              </div>
+
               <div className="rounded-xl border border-dashed border-gray-200 px-4 py-3 text-sm text-gray-500 dark:border-slate-800 dark:text-slate-400">
                 {isAdmin
-                  ? "Perubahan akan disimpan ke backend dan dipakai sebagai sumber pengaturan toko serta pajak."
-                  : "Mode baca saja. Hubungi admin untuk mengubah pengaturan toko dan pajak."}
+                  ? "Perubahan akan disimpan ke backend dan dipakai sebagai sumber pengaturan toko, pajak, dan diskon pembelian POS."
+                  : "Mode baca saja. Hubungi admin untuk mengubah pengaturan toko, pajak, dan diskon."}
               </div>
             </div>
           </div>

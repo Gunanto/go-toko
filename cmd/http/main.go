@@ -163,15 +163,16 @@ func main() {
 	storeChatService := service.NewStoreChatService(storeConversationRepo, storeMessageRepo, userRepo)
 	storeChatHandler := http.NewStoreChatHandler(storeChatService)
 
-	// Order
-	orderRepo := repository.NewOrderRepository(db)
-	orderService := service.NewOrderService(orderRepo, productRepo, categoryRepo, customerRepo, userRepo, paymentRepo, cache)
-	orderHandler := http.NewOrderHandler(orderService)
-
 	// Settings
 	settingRepo := repository.NewSettingRepository(db)
 	settingService := service.NewSettingService(settingRepo, cache)
 	settingHandler := http.NewSettingHandler(settingService)
+
+	// Order
+	orderRepo := repository.NewOrderRepository(db)
+	orderService := service.NewOrderService(orderRepo, productRepo, categoryRepo, customerRepo, userRepo, paymentRepo, settingRepo, cache)
+	orderHandler := http.NewOrderHandler(orderService)
+
 	uploadHandler := http.NewUploadHandler(objectStorage)
 
 	// Init router

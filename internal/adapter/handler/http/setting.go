@@ -19,13 +19,15 @@ func NewSettingHandler(svc port.SettingService) *SettingHandler {
 }
 
 type updateSettingsRequest struct {
-	StoreName      string   `json:"store_name" binding:"required" example:"GEZY Commerce"`
-	StoreAddress   string   `json:"store_address" binding:"required" example:"Jl. Merdeka No. 45, Bandung"`
-	StoreContact   string   `json:"store_contact" binding:"required" example:"+62 812 3344 2211"`
-	TaxName        string   `json:"tax_name" binding:"required" example:"PPN"`
-	TaxRate        *float64 `json:"tax_rate" binding:"min=0" example:"11"`
-	ServiceFeeName string   `json:"service_fee_name" binding:"required" example:"Biaya Layanan"`
-	ServiceFeeRate *float64 `json:"service_fee_rate" binding:"min=0" example:"2"`
+	StoreName            string   `json:"store_name" binding:"required" example:"GEZY Commerce"`
+	StoreAddress         string   `json:"store_address" binding:"required" example:"Jl. Merdeka No. 45, Bandung"`
+	StoreContact         string   `json:"store_contact" binding:"required" example:"+62 812 3344 2211"`
+	TaxName              string   `json:"tax_name" binding:"required" example:"PPN"`
+	TaxRate              *float64 `json:"tax_rate" binding:"min=0,max=100" example:"11"`
+	ServiceFeeName       string   `json:"service_fee_name" binding:"required" example:"Biaya Layanan"`
+	ServiceFeeRate       *float64 `json:"service_fee_rate" binding:"min=0,max=100" example:"2"`
+	PurchaseDiscountName string   `json:"purchase_discount_name" binding:"required" example:"Diskon Pembelian"`
+	PurchaseDiscountRate *float64 `json:"purchase_discount_rate" binding:"min=0,max=100" example:"5"`
 }
 
 // GetSettings godoc
@@ -80,15 +82,21 @@ func (sh *SettingHandler) UpdateSettings(ctx *gin.Context) {
 		validationError(ctx, errors.New("service_fee_rate is required"))
 		return
 	}
+	if req.PurchaseDiscountRate == nil {
+		validationError(ctx, errors.New("purchase_discount_rate is required"))
+		return
+	}
 
 	setting := domain.Setting{
-		StoreName:      req.StoreName,
-		StoreAddress:   req.StoreAddress,
-		StoreContact:   req.StoreContact,
-		TaxName:        req.TaxName,
-		TaxRate:        *req.TaxRate,
-		ServiceFeeName: req.ServiceFeeName,
-		ServiceFeeRate: *req.ServiceFeeRate,
+		StoreName:            req.StoreName,
+		StoreAddress:         req.StoreAddress,
+		StoreContact:         req.StoreContact,
+		TaxName:              req.TaxName,
+		TaxRate:              *req.TaxRate,
+		ServiceFeeName:       req.ServiceFeeName,
+		ServiceFeeRate:       *req.ServiceFeeRate,
+		PurchaseDiscountName: req.PurchaseDiscountName,
+		PurchaseDiscountRate: *req.PurchaseDiscountRate,
 	}
 
 	updated, err := sh.svc.UpdateSettings(ctx, &setting)

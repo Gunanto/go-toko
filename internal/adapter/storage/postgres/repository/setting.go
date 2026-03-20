@@ -33,6 +33,8 @@ func (sr *SettingRepository) GetSettings(ctx context.Context) (*domain.Setting, 
 		"tax_rate",
 		"service_fee_name",
 		"service_fee_rate",
+		"purchase_discount_name",
+		"purchase_discount_rate",
 		"created_at",
 		"updated_at",
 	).From("settings").Where(sq.Eq{"id": 1}).Limit(1)
@@ -51,6 +53,8 @@ func (sr *SettingRepository) GetSettings(ctx context.Context) (*domain.Setting, 
 		&setting.TaxRate,
 		&setting.ServiceFeeName,
 		&setting.ServiceFeeRate,
+		&setting.PurchaseDiscountName,
+		&setting.PurchaseDiscountRate,
 		&setting.CreatedAt,
 		&setting.UpdatedAt,
 	)
@@ -77,6 +81,8 @@ func (sr *SettingRepository) UpsertSettings(ctx context.Context, setting *domain
 			"tax_rate",
 			"service_fee_name",
 			"service_fee_rate",
+			"purchase_discount_name",
+			"purchase_discount_rate",
 			"updated_at",
 		).
 		Values(
@@ -88,6 +94,8 @@ func (sr *SettingRepository) UpsertSettings(ctx context.Context, setting *domain
 			setting.TaxRate,
 			setting.ServiceFeeName,
 			setting.ServiceFeeRate,
+			setting.PurchaseDiscountName,
+			setting.PurchaseDiscountRate,
 			now,
 		).
 		Suffix(`
@@ -99,8 +107,10 @@ func (sr *SettingRepository) UpsertSettings(ctx context.Context, setting *domain
 				tax_rate = EXCLUDED.tax_rate,
 				service_fee_name = EXCLUDED.service_fee_name,
 				service_fee_rate = EXCLUDED.service_fee_rate,
+				purchase_discount_name = EXCLUDED.purchase_discount_name,
+				purchase_discount_rate = EXCLUDED.purchase_discount_rate,
 				updated_at = EXCLUDED.updated_at
-			RETURNING id, store_name, store_address, store_contact, tax_name, tax_rate, service_fee_name, service_fee_rate, created_at, updated_at
+			RETURNING id, store_name, store_address, store_contact, tax_name, tax_rate, service_fee_name, service_fee_rate, purchase_discount_name, purchase_discount_rate, created_at, updated_at
 		`)
 
 	sql, args, err := query.ToSql()
@@ -117,6 +127,8 @@ func (sr *SettingRepository) UpsertSettings(ctx context.Context, setting *domain
 		&setting.TaxRate,
 		&setting.ServiceFeeName,
 		&setting.ServiceFeeRate,
+		&setting.PurchaseDiscountName,
+		&setting.PurchaseDiscountRate,
 		&setting.CreatedAt,
 		&setting.UpdatedAt,
 	)

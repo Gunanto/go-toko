@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"strings"
 
 	"github.com/bagashiz/go-pos/internal/core/domain"
@@ -22,11 +23,12 @@ type OrderService struct {
 	customerRepo port.CustomerRepository
 	userRepo     port.UserRepository
 	paymentRepo  port.PaymentRepository
+	settingRepo  port.SettingRepository
 	cache        port.CacheRepository
 }
 
 // NewOrderService creates a new order service instance
-func NewOrderService(orderRepo port.OrderRepository, productRepo port.ProductRepository, categoryRepo port.CategoryRepository, customerRepo port.CustomerRepository, userRepo port.UserRepository, paymentRepo port.PaymentRepository, cache port.CacheRepository) *OrderService {
+func NewOrderService(orderRepo port.OrderRepository, productRepo port.ProductRepository, categoryRepo port.CategoryRepository, customerRepo port.CustomerRepository, userRepo port.UserRepository, paymentRepo port.PaymentRepository, settingRepo port.SettingRepository, cache port.CacheRepository) *OrderService {
 	return &OrderService{
 		orderRepo,
 		productRepo,
@@ -34,6 +36,7 @@ func NewOrderService(orderRepo port.OrderRepository, productRepo port.ProductRep
 		customerRepo,
 		userRepo,
 		paymentRepo,
+		settingRepo,
 		cache,
 	}
 }
@@ -45,7 +48,7 @@ func (os *OrderService) CreateOrder(ctx context.Context, order *domain.Order) (*
 		order.Channel = domain.OrderChannelPOS
 	}
 
-	order, err := os.prepareOrderForCreate(ctx, order, false)
+	order, err := os.prepareOrderForCreate(ctx, order, false, true)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +81,7 @@ func (os *OrderService) CreateStoreOrder(ctx context.Context, order *domain.Orde
 		return nil, err
 	}
 
-	order, err = os.prepareOrderForCreate(ctx, order, true)
+	order, err = os.prepareOrderForCreate(ctx, order, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +199,7 @@ func (os *OrderService) invalidateCustomerCache(ctx context.Context, id uint64) 
 	return nil
 }
 
-func (os *OrderService) prepareOrderForCreate(ctx context.Context, order *domain.Order, allowAutoPaid bool) (*domain.Order, error) {
+func (os *OrderService) prepareOrderForCreate(ctx context.Context, order *domain.Order, allowAutoPaid, applyPurchaseDiscount bool) (*domain.Order, error) {
 	var totalPrice float64
 	for i, orderProduct := range order.Products {
 		product, err := os.productRepo.GetProductByID(ctx, orderProduct.ProductID)
@@ -216,6 +219,14 @@ func (os *OrderService) prepareOrderForCreate(ctx context.Context, order *domain
 		totalPrice += order.Products[i].TotalPrice
 	}
 
+	if applyPurchaseDiscount {
+		discountedTotal, err := os.applyPurchaseDiscount(ctx, totalPrice)
+		if err != nil {
+			return nil, err
+		}
+		totalPrice = discountedTotal
+	}
+
 	if allowAutoPaid && order.TotalPaid == 0 && order.Status != domain.OrderStatusPending {
 		order.TotalPaid = totalPrice
 	}
@@ -233,6 +244,36 @@ func (os *OrderService) prepareOrderForCreate(ctx context.Context, order *domain
 	}
 
 	return order, nil
+}
+
+func (os *OrderService) applyPurchaseDiscount(ctx context.Context, subtotal float64) (float64, error) {
+	if subtotal <= 0 || os.settingRepo == nil {
+		return subtotal, nil
+	}
+
+	setting, err := os.settingRepo.GetSettings(ctx)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return subtotal, nil
+		}
+		return 0, domain.ErrInternal
+	}
+
+	rate := setting.PurchaseDiscountRate
+	if rate <= 0 {
+		return subtotal, nil
+	}
+	if rate > 100 {
+		rate = 100
+	}
+
+	discount := subtotal * rate / 100
+	total := subtotal - discount
+	if total < 0 {
+		total = 0
+	}
+
+	return math.Round(total*100) / 100, nil
 }
 
 func (os *OrderService) persistOrder(ctx context.Context, order *domain.Order) (*domain.Order, error) {

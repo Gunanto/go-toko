@@ -3,6 +3,7 @@ import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import {
   createOrder,
+  fetchSettings,
   listCustomers,
   listPayments,
   listProducts,
@@ -21,6 +22,7 @@ function Pos() {
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [search, setSearch] = useState("");
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
@@ -68,7 +70,13 @@ function Pos() {
     () => cartItems.reduce((sum, item) => sum + item.price * item.qty, 0),
     [cartItems],
   );
-  const discount = 0;
+  const purchaseDiscountName =
+    settings?.purchase_discount_name?.trim() || "Diskon Pembelian";
+  const purchaseDiscountRate = Number(settings?.purchase_discount_rate || 0);
+  const discount =
+    purchaseDiscountRate > 0
+      ? Math.round((subtotal * purchaseDiscountRate) / 100)
+      : 0;
   const total = subtotal - discount;
   const paidAmount = Number(cashPaid) || 0;
   const changeAmount = Math.max(0, paidAmount - total);
@@ -300,6 +308,29 @@ function Pos() {
     category: product.category?.name || "Umum",
     image: product.image || placeholderImage,
   });
+
+  useEffect(() => {
+    if (!token) return;
+    let isMounted = true;
+    const loadSettings = async () => {
+      try {
+        const response = await fetchSettings({ token });
+        if (!isMounted) return;
+        setSettings(response?.data || null);
+      } catch (error) {
+        if (!isMounted) return;
+        if (error?.status === 401 || error?.status === 403) {
+          logout();
+          return;
+        }
+        setSettings(null);
+      }
+    };
+    loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, [token, logout]);
 
   useEffect(() => {
     if (!token) return;
@@ -608,7 +639,11 @@ function Pos() {
               <span>{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Diskon</span>
+              <span>
+                {purchaseDiscountRate > 0
+                  ? `${purchaseDiscountName} (${purchaseDiscountRate}%)`
+                  : purchaseDiscountName}
+              </span>
               <span>{discount ? `-${formatCurrency(discount)}` : "Rp 0"}</span>
             </div>
             <div className="flex items-center justify-between font-semibold text-gray-900 dark:text-white">
