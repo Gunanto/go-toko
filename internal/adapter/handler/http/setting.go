@@ -1,6 +1,8 @@
 package http
 
 import (
+	"errors"
+
 	"github.com/bagashiz/go-pos/internal/core/domain"
 	"github.com/bagashiz/go-pos/internal/core/port"
 	"github.com/gin-gonic/gin"
@@ -21,9 +23,9 @@ type updateSettingsRequest struct {
 	StoreAddress   string   `json:"store_address" binding:"required" example:"Jl. Merdeka No. 45, Bandung"`
 	StoreContact   string   `json:"store_contact" binding:"required" example:"+62 812 3344 2211"`
 	TaxName        string   `json:"tax_name" binding:"required" example:"PPN"`
-	TaxRate        *float64 `json:"tax_rate" binding:"required,min=0" example:"11"`
+	TaxRate        *float64 `json:"tax_rate" binding:"min=0" example:"11"`
 	ServiceFeeName string   `json:"service_fee_name" binding:"required" example:"Biaya Layanan"`
-	ServiceFeeRate *float64 `json:"service_fee_rate" binding:"required,min=0" example:"2"`
+	ServiceFeeRate *float64 `json:"service_fee_rate" binding:"min=0" example:"2"`
 }
 
 // GetSettings godoc
@@ -68,6 +70,14 @@ func (sh *SettingHandler) UpdateSettings(ctx *gin.Context) {
 	var req updateSettingsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		validationError(ctx, err)
+		return
+	}
+	if req.TaxRate == nil {
+		validationError(ctx, errors.New("tax_rate is required"))
+		return
+	}
+	if req.ServiceFeeRate == nil {
+		validationError(ctx, errors.New("service_fee_rate is required"))
 		return
 	}
 
