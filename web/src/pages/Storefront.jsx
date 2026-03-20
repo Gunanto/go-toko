@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   fetchStoreSettings,
   listStoreCategories,
@@ -15,17 +15,25 @@ const placeholderImage =
 
 function Storefront() {
   const pageSize = 24;
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [settings, setSettings] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all",
+  );
   const [cartCount, setCartCount] = useState(0);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(
+    Math.max(Number(searchParams.get("page") || "1") - 1, 0),
+  );
   const [hasNext, setHasNext] = useState(false);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    searchParams.get("q") || "",
+  );
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("id-ID", {
@@ -40,6 +48,35 @@ function Storefront() {
     window.addEventListener("store-cart-updated", sync);
     return () => window.removeEventListener("store-cart-updated", sync);
   }, []);
+
+  useEffect(() => {
+    const nextSearch = searchParams.get("q") || "";
+    const nextCategory = searchParams.get("category") || "all";
+    const nextPage = Math.max(Number(searchParams.get("page") || "1") - 1, 0);
+
+    setSearch((current) => (current === nextSearch ? current : nextSearch));
+    setSelectedCategory((current) =>
+      current === nextCategory ? current : nextCategory,
+    );
+    setPage((current) => (current === nextPage ? current : nextPage));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [search]);
+
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+    if (search.trim()) nextParams.set("q", search.trim());
+    if (selectedCategory !== "all")
+      nextParams.set("category", selectedCategory);
+    if (page > 0) nextParams.set("page", String(page + 1));
+    setSearchParams(nextParams, { replace: true });
+  }, [page, search, selectedCategory, setSearchParams]);
 
   useEffect(() => {
     let isMounted = true;
@@ -79,7 +116,7 @@ function Storefront() {
 
   useEffect(() => {
     setPage(0);
-  }, [search, selectedCategory]);
+  }, [debouncedSearch, selectedCategory]);
 
   useEffect(() => {
     let isMounted = true;
@@ -90,7 +127,7 @@ function Storefront() {
         const response = await listStoreProducts({
           skip: page * pageSize,
           limit: pageSize,
-          query: search.trim(),
+          query: debouncedSearch,
           categoryId: selectedCategory === "all" ? "" : selectedCategory,
         });
         if (!isMounted) return;
@@ -113,7 +150,7 @@ function Storefront() {
     return () => {
       isMounted = false;
     };
-  }, [page, pageSize, search, selectedCategory]);
+  }, [debouncedSearch, page, pageSize, selectedCategory]);
 
   const categoryOptions = useMemo(() => {
     return [
@@ -130,6 +167,16 @@ function Storefront() {
     () => products.filter((item) => Number(item.stock ?? 0) > 0).slice(0, 8),
     [products],
   );
+  const totalPages = Math.max(Math.ceil(totalProducts / pageSize), 1);
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 1) return [1];
+
+    const pages = new Set([1, totalPages, page + 1]);
+    if (page > 0) pages.add(page);
+    if (page + 2 <= totalPages) pages.add(page + 2);
+
+    return Array.from(pages).sort((left, right) => left - right);
+  }, [page, totalPages]);
 
   const storeName = settings?.store_name?.trim() || "GEZY Commerce";
   return (
@@ -213,7 +260,7 @@ function Storefront() {
                     Ragam Kategori
                   </p>
                   <p className="mt-2 text-2xl font-semibold">
-                    {Math.max(categories.length - 1, 0)}
+                    {categories.length}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-amber-300/10 px-4 py-3">
@@ -389,8 +436,7 @@ function Storefront() {
               </h2>
             </div>
             <div className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-              Halaman {page + 1} dari{" "}
-              {Math.max(Math.ceil(totalProducts / pageSize), 1)}
+              Halaman {page + 1} dari {totalPages}
             </div>
           </div>
 
@@ -481,7 +527,7 @@ function Storefront() {
             <p className="text-sm text-slate-500">
               Menampilkan {products.length} dari {totalProducts} produk.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setPage((current) => Math.max(current - 1, 0))}
@@ -490,6 +536,21 @@ function Storefront() {
               >
                 Sebelumnya
               </button>
+              {visiblePages.map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  type="button"
+                  onClick={() => setPage(pageNumber - 1)}
+                  disabled={loading}
+                  className={`min-w-[2.75rem] rounded-full px-3 py-2 text-sm font-semibold transition ${
+                    pageNumber === page + 1
+                      ? "bg-slate-950 text-white"
+                      : "border border-slate-200 bg-white text-slate-700"
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
+                >
+                  {pageNumber}
+                </button>
+              ))}
               <button
                 type="button"
                 onClick={() => setPage((current) => current + 1)}
