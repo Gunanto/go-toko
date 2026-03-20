@@ -10,6 +10,7 @@ const placeholderImage =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='700' viewBox='0 0 900 700'><rect width='900' height='700' fill='%23dbeafe'/><rect x='40' y='40' width='820' height='620' rx='36' fill='%23bfdbfe'/><circle cx='700' cy='180' r='120' fill='%2393c5fd'/><circle cx='190' cy='520' r='140' fill='%237dd3fc'/></svg>";
 
 function Storefront() {
+  const pageSize = 24;
   const [products, setProducts] = useState([]);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,8 @@ function Storefront() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [cartCount, setCartCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("id-ID", {
@@ -51,17 +54,30 @@ function Storefront() {
   }, []);
 
   useEffect(() => {
+    setPage(0);
+  }, [search, selectedCategory]);
+
+  useEffect(() => {
     let isMounted = true;
     const load = async () => {
       setLoading(true);
       setError("");
       try {
-        const response = await listStoreProducts({ limit: 120 });
+        const response = await listStoreProducts({
+          skip: page * pageSize,
+          limit: pageSize,
+          query: search.trim(),
+          categoryId: selectedCategory === "all" ? "" : selectedCategory,
+        });
         if (!isMounted) return;
-        setProducts(response?.data?.products || []);
+        const list = response?.data?.products || [];
+        setProducts(list);
+        setHasNext(list.length === pageSize);
       } catch (err) {
         if (!isMounted) return;
         setError(err.message || "Gagal memuat katalog.");
+        setProducts([]);
+        setHasNext(false);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -70,43 +86,25 @@ function Storefront() {
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return products
-      .filter((product) =>
-        selectedCategory === "all"
-          ? true
-          : product.category?.name === selectedCategory,
-      )
-      .filter((product) => {
-        if (!query) return true;
-        return (
-          product.name?.toLowerCase().includes(query) ||
-          product.category?.name?.toLowerCase().includes(query) ||
-          product.slug?.toLowerCase().includes(query)
-        );
-      });
-  }, [products, search, selectedCategory]);
+  }, [page, pageSize, search, selectedCategory]);
 
   const categories = useMemo(() => {
-    const values = new Set(
-      products.map((product) => product.category?.name).filter(Boolean),
-    );
-    return ["all", ...Array.from(values)];
+    const values = new Map();
+    products.forEach((product) => {
+      if (product.category?.id && product.category?.name) {
+        values.set(String(product.category.id), product.category.name);
+      }
+    });
+    return [
+      { id: "all", name: "Lihat Semua" },
+      ...Array.from(values, ([id, name]) => ({ id, name })),
+    ];
   }, [products]);
 
-  const heroProducts = useMemo(
-    () => filteredProducts.slice(0, 3),
-    [filteredProducts],
-  );
+  const heroProducts = useMemo(() => products.slice(0, 3), [products]);
   const spotlightProducts = useMemo(
-    () =>
-      filteredProducts
-        .filter((item) => Number(item.stock ?? 0) > 0)
-        .slice(0, 8),
-    [filteredProducts],
+    () => products.filter((item) => Number(item.stock ?? 0) > 0).slice(0, 8),
+    [products],
   );
 
   const storeName = settings?.store_name?.trim() || "GEZY Commerce";
@@ -223,16 +221,16 @@ function Storefront() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {categories.map((category) => (
                     <button
-                      key={category}
+                      key={category.id}
                       type="button"
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => setSelectedCategory(category.id)}
                       className={`max-w-full rounded-full px-3 py-2 text-left text-xs font-semibold transition ${
-                        selectedCategory === category
+                        selectedCategory === category.id
                           ? "bg-amber-300 text-slate-950"
                           : "bg-white/10 text-slate-200 hover:bg-white/15"
                       }`}
                     >
-                      {category === "all" ? "Lihat Semua" : category}
+                      {category.name}
                     </button>
                   ))}
                 </div>
@@ -367,7 +365,7 @@ function Storefront() {
               </h2>
             </div>
             <div className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-              {filteredProducts.length} produk siap dipilih
+              Halaman {page + 1} • {products.length} produk tampil
             </div>
           </div>
 
@@ -375,14 +373,14 @@ function Storefront() {
             <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
               Memuat katalog...
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/80 px-4 py-10 text-center text-sm text-slate-500">
               Belum ada produk yang cocok dengan pencarian atau kategori
               pilihan.
             </div>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {filteredProducts.map((product, index) => (
+              {products.map((product, index) => (
                 <Link
                   key={product.id}
                   to={`/store/${product.slug}`}
@@ -396,7 +394,7 @@ function Storefront() {
                     />
                     <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
                       <span className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-700">
-                        #{index + 1}
+                        #{page * pageSize + index + 1}
                       </span>
                       {product.promo_label ? (
                         <span className="rounded-full bg-amber-300 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-950">
@@ -454,6 +452,29 @@ function Storefront() {
               ))}
             </div>
           )}
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-500">
+              Menampilkan {products.length} produk pada halaman ini.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(current - 1, 0))}
+                disabled={page === 0 || loading}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Sebelumnya
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((current) => current + 1)}
+                disabled={!hasNext || loading}
+                className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                Berikutnya
+              </button>
+            </div>
+          </div>
         </section>
       </main>
       <StoreMobileNav />
