@@ -227,6 +227,13 @@ func (os *OrderService) prepareOrderForCreate(ctx context.Context, order *domain
 		totalPrice = discountedTotal
 	}
 
+	if order.SpecialDiscount > 0 {
+		totalPrice -= order.SpecialDiscount
+		if totalPrice < 0 {
+			totalPrice = 0
+		}
+	}
+
 	if allowAutoPaid && order.TotalPaid == 0 && order.Status != domain.OrderStatusPending {
 		order.TotalPaid = totalPrice
 	}

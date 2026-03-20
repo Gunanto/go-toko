@@ -32,6 +32,7 @@ type Order struct {
 	CustomerEmail   string
 	ShippingAddress string
 	CustomerNote    string
+	SpecialDiscount float64
 	TotalPrice      float64
 	TotalPaid       float64
 	TotalReturn     float64

@@ -153,34 +153,48 @@ func newProductResponse(product *domain.Product) productResponse {
 
 // settingResponse represents a setting response body.
 type settingResponse struct {
-	ID                   uint64    `json:"id" example:"1"`
-	StoreName            string    `json:"store_name" example:"GEZY Commerce"`
-	StoreAddress         string    `json:"store_address" example:"Jl. Merdeka No. 45, Bandung"`
-	StoreContact         string    `json:"store_contact" example:"+62 812 3344 2211"`
-	TaxName              string    `json:"tax_name" example:"PPN"`
-	TaxRate              float64   `json:"tax_rate" example:"11"`
-	ServiceFeeName       string    `json:"service_fee_name" example:"Biaya Layanan"`
-	ServiceFeeRate       float64   `json:"service_fee_rate" example:"2"`
-	PurchaseDiscountName string    `json:"purchase_discount_name" example:"Diskon Pembelian"`
-	PurchaseDiscountRate float64   `json:"purchase_discount_rate" example:"5"`
-	CreatedAt            time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
-	UpdatedAt            time.Time `json:"updated_at" example:"1970-01-01T00:00:00Z"`
+	ID                     uint64    `json:"id" example:"1"`
+	StoreName              string    `json:"store_name" example:"GEZY Commerce"`
+	StoreAddress           string    `json:"store_address" example:"Jl. Merdeka No. 45, Bandung"`
+	StoreContact           string    `json:"store_contact" example:"+62 812 3344 2211"`
+	StorefrontBadge        string    `json:"storefront_badge" example:"Etalase Resmi GEZY Commerce"`
+	StorefrontHeroTitle    string    `json:"storefront_hero_title" example:"Temukan produk pilihan dan nikmati pengalaman belanja yang cepat, praktis, dan nyaman."`
+	StorefrontHeroBody     string    `json:"storefront_hero_body" example:"Selamat datang di etalase resmi kami, tempat produk pilihan siap Anda pesan tanpa ribet."`
+	StorefrontFeatureTitle string    `json:"storefront_feature_title" example:"Belanja Lebih Mudah"`
+	StorefrontFeatureItem1 string    `json:"storefront_feature_item_1" example:"Temukan produk favoritmu lewat pencarian atau kategori pilihan."`
+	StorefrontFeatureItem2 string    `json:"storefront_feature_item_2" example:"Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail."`
+	StorefrontFeatureItem3 string    `json:"storefront_feature_item_3" example:"Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah."`
+	TaxName                string    `json:"tax_name" example:"PPN"`
+	TaxRate                float64   `json:"tax_rate" example:"11"`
+	ServiceFeeName         string    `json:"service_fee_name" example:"Biaya Layanan"`
+	ServiceFeeRate         float64   `json:"service_fee_rate" example:"2"`
+	PurchaseDiscountName   string    `json:"purchase_discount_name" example:"Diskon Pembelian"`
+	PurchaseDiscountRate   float64   `json:"purchase_discount_rate" example:"5"`
+	CreatedAt              time.Time `json:"created_at" example:"1970-01-01T00:00:00Z"`
+	UpdatedAt              time.Time `json:"updated_at" example:"1970-01-01T00:00:00Z"`
 }
 
 func newSettingResponse(setting *domain.Setting) settingResponse {
 	return settingResponse{
-		ID:                   setting.ID,
-		StoreName:            setting.StoreName,
-		StoreAddress:         setting.StoreAddress,
-		StoreContact:         setting.StoreContact,
-		TaxName:              setting.TaxName,
-		TaxRate:              setting.TaxRate,
-		ServiceFeeName:       setting.ServiceFeeName,
-		ServiceFeeRate:       setting.ServiceFeeRate,
-		PurchaseDiscountName: setting.PurchaseDiscountName,
-		PurchaseDiscountRate: setting.PurchaseDiscountRate,
-		CreatedAt:            setting.CreatedAt,
-		UpdatedAt:            setting.UpdatedAt,
+		ID:                     setting.ID,
+		StoreName:              setting.StoreName,
+		StoreAddress:           setting.StoreAddress,
+		StoreContact:           setting.StoreContact,
+		StorefrontBadge:        setting.StorefrontBadge,
+		StorefrontHeroTitle:    setting.StorefrontHeroTitle,
+		StorefrontHeroBody:     setting.StorefrontHeroBody,
+		StorefrontFeatureTitle: setting.StorefrontFeatureTitle,
+		StorefrontFeatureItem1: setting.StorefrontFeatureItem1,
+		StorefrontFeatureItem2: setting.StorefrontFeatureItem2,
+		StorefrontFeatureItem3: setting.StorefrontFeatureItem3,
+		TaxName:                setting.TaxName,
+		TaxRate:                setting.TaxRate,
+		ServiceFeeName:         setting.ServiceFeeName,
+		ServiceFeeRate:         setting.ServiceFeeRate,
+		PurchaseDiscountName:   setting.PurchaseDiscountName,
+		PurchaseDiscountRate:   setting.PurchaseDiscountRate,
+		CreatedAt:              setting.CreatedAt,
+		UpdatedAt:              setting.UpdatedAt,
 	}
 }
 

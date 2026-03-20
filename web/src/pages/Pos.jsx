@@ -32,6 +32,7 @@ function Pos() {
   const [customerName, setCustomerName] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [paymentId, setPaymentId] = useState("");
+  const [specialDiscount, setSpecialDiscount] = useState("0");
   const [cashPaid, setCashPaid] = useState("");
   const [shift, setShift] = useState(() => {
     try {
@@ -77,7 +78,8 @@ function Pos() {
     purchaseDiscountRate > 0
       ? Math.round((subtotal * purchaseDiscountRate) / 100)
       : 0;
-  const total = subtotal - discount;
+  const specialDiscountAmount = Math.max(0, Number(specialDiscount) || 0);
+  const total = Math.max(0, subtotal - discount - specialDiscountAmount);
   const paidAmount = Number(cashPaid) || 0;
   const changeAmount = Math.max(0, paidAmount - total);
   const checkoutIssue = !shift
@@ -175,6 +177,7 @@ function Pos() {
       customerId,
       customerName,
       paymentId,
+      specialDiscount,
       savedAt: new Date().toISOString(),
     });
     flash("success", "Draft tersimpan.");
@@ -186,6 +189,7 @@ function Pos() {
     setCustomerId(draft.customerId || "");
     setCustomerName(draft.customerName || "");
     setPaymentId(draft.paymentId || "");
+    setSpecialDiscount(String(draft.specialDiscount ?? "0"));
     setDraft(null);
     flash("success", "Draft dipulihkan ke keranjang.");
   };
@@ -239,6 +243,7 @@ function Pos() {
       payment_id: Number(paymentId),
       customer_id: customerId ? Number(customerId) : undefined,
       customer_name: customerName.trim() || "Pelanggan Umum",
+      special_discount: specialDiscountAmount,
       total_paid: Math.round(paidAmount || 0),
       channel: "pos",
       products: cartItems.map((item) => ({
@@ -290,6 +295,7 @@ function Pos() {
       }
       setCartItems([]);
       setDraft(null);
+      setSpecialDiscount("0");
       setCashPaid("");
       flash("success", "Transaksi berhasil. Terima kasih.");
     } catch (error) {
@@ -348,6 +354,7 @@ function Pos() {
   useEffect(() => {
     if (cartItems.length === 0) {
       setCashPaid("");
+      setSpecialDiscount("0");
     }
   }, [cartItems.length]);
 
@@ -645,6 +652,24 @@ function Pos() {
                   : purchaseDiscountName}
               </span>
               <span>{discount ? `-${formatCurrency(discount)}` : "Rp 0"}</span>
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span>Diskon Khusus</span>
+                <span>
+                  {specialDiscountAmount
+                    ? `-${formatCurrency(specialDiscountAmount)}`
+                    : "Rp 0"}
+                </span>
+              </div>
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={specialDiscount}
+                onChange={(event) => setSpecialDiscount(event.target.value)}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
             </div>
             <div className="flex items-center justify-between font-semibold text-gray-900 dark:text-white">
               <span>Total</span>

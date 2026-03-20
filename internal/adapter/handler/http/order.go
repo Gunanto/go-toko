@@ -30,12 +30,13 @@ type orderProductRequest struct {
 
 // createOrderRequest represents a request body for creating a new order
 type createOrderRequest struct {
-	PaymentID    uint64                `json:"payment_id" binding:"required,min=1" example:"1"`
-	CustomerID   *uint64               `json:"customer_id" binding:"omitempty,min=1" example:"1"`
-	CustomerName string                `json:"customer_name" binding:"required" example:"John Doe"`
-	TotalPaid    int64                 `json:"total_paid" binding:"required,min=0" example:"100000"`
-	Channel      string                `json:"channel" binding:"omitempty,oneof=pos manual" example:"pos"`
-	Products     []orderProductRequest `json:"products" binding:"required,min=1,dive"`
+	PaymentID       uint64                `json:"payment_id" binding:"required,min=1" example:"1"`
+	CustomerID      *uint64               `json:"customer_id" binding:"omitempty,min=1" example:"1"`
+	CustomerName    string                `json:"customer_name" binding:"required" example:"John Doe"`
+	SpecialDiscount float64               `json:"special_discount" binding:"min=0" example:"10000"`
+	TotalPaid       int64                 `json:"total_paid" binding:"required,min=0" example:"100000"`
+	Channel         string                `json:"channel" binding:"omitempty,oneof=pos manual" example:"pos"`
+	Products        []orderProductRequest `json:"products" binding:"required,min=1,dive"`
 }
 
 type createStoreOrderRequest struct {
@@ -87,13 +88,14 @@ func (oh *OrderHandler) CreateOrder(ctx *gin.Context) {
 	authPayload := getAuthPayload(ctx, authorizationPayloadKey)
 
 	order := domain.Order{
-		UserID:       authPayload.UserID,
-		PaymentID:    req.PaymentID,
-		CustomerID:   req.CustomerID,
-		CustomerName: req.CustomerName,
-		TotalPaid:    float64(req.TotalPaid),
-		Channel:      domain.OrderChannel(req.Channel),
-		Products:     products,
+		UserID:          authPayload.UserID,
+		PaymentID:       req.PaymentID,
+		CustomerID:      req.CustomerID,
+		CustomerName:    req.CustomerName,
+		SpecialDiscount: req.SpecialDiscount,
+		TotalPaid:       float64(req.TotalPaid),
+		Channel:         domain.OrderChannel(req.Channel),
+		Products:        products,
 	}
 
 	_, err := oh.svc.CreateOrder(ctx, &order)

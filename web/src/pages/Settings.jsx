@@ -20,6 +20,18 @@ const initialForm = {
   store_name: "",
   store_address: "",
   store_contact: "",
+  storefront_badge: "Etalase Resmi GEZY Commerce",
+  storefront_hero_title:
+    "Temukan produk pilihan dan nikmati pengalaman belanja yang cepat, praktis, dan nyaman.",
+  storefront_hero_body:
+    "Selamat datang di etalase resmi kami, tempat produk pilihan siap Anda pesan tanpa ribet.",
+  storefront_feature_title: "Belanja Lebih Mudah",
+  storefront_feature_item_1:
+    "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
+  storefront_feature_item_2:
+    "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
+  storefront_feature_item_3:
+    "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
   tax_name: "",
   tax_rate: "0",
   service_fee_name: "",
@@ -129,6 +141,25 @@ function Settings() {
           store_name: data.store_name || "",
           store_address: data.store_address || "",
           store_contact: data.store_contact || "",
+          storefront_badge:
+            data.storefront_badge || "Etalase Resmi GEZY Commerce",
+          storefront_hero_title:
+            data.storefront_hero_title ||
+            "Temukan produk pilihan dan nikmati pengalaman belanja yang cepat, praktis, dan nyaman.",
+          storefront_hero_body:
+            data.storefront_hero_body ||
+            "Selamat datang di etalase resmi kami, tempat produk pilihan siap Anda pesan tanpa ribet.",
+          storefront_feature_title:
+            data.storefront_feature_title || "Belanja Lebih Mudah",
+          storefront_feature_item_1:
+            data.storefront_feature_item_1 ||
+            "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
+          storefront_feature_item_2:
+            data.storefront_feature_item_2 ||
+            "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
+          storefront_feature_item_3:
+            data.storefront_feature_item_3 ||
+            "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
           tax_name: data.tax_name || "",
           tax_rate: String(data.tax_rate ?? 0),
           service_fee_name: data.service_fee_name || "",
@@ -188,6 +219,13 @@ function Settings() {
     const storeName = form.store_name.trim();
     const storeAddress = form.store_address.trim();
     const storeContact = form.store_contact.trim();
+    const storefrontBadge = form.storefront_badge.trim();
+    const storefrontHeroTitle = form.storefront_hero_title.trim();
+    const storefrontHeroBody = form.storefront_hero_body.trim();
+    const storefrontFeatureTitle = form.storefront_feature_title.trim();
+    const storefrontFeatureItem1 = form.storefront_feature_item_1.trim();
+    const storefrontFeatureItem2 = form.storefront_feature_item_2.trim();
+    const storefrontFeatureItem3 = form.storefront_feature_item_3.trim();
     const taxName = form.tax_name.trim();
     const serviceFeeName = form.service_fee_name.trim();
     const purchaseDiscountName = form.purchase_discount_name.trim();
@@ -206,6 +244,13 @@ function Settings() {
       !storeName ||
       !storeAddress ||
       !storeContact ||
+      !storefrontBadge ||
+      !storefrontHeroTitle ||
+      !storefrontHeroBody ||
+      !storefrontFeatureTitle ||
+      !storefrontFeatureItem1 ||
+      !storefrontFeatureItem2 ||
+      !storefrontFeatureItem3 ||
       !taxName ||
       !serviceFeeName ||
       !purchaseDiscountName
@@ -242,6 +287,13 @@ function Settings() {
         store_name: storeName,
         store_address: storeAddress,
         store_contact: storeContact,
+        storefront_badge: storefrontBadge,
+        storefront_hero_title: storefrontHeroTitle,
+        storefront_hero_body: storefrontHeroBody,
+        storefront_feature_title: storefrontFeatureTitle,
+        storefront_feature_item_1: storefrontFeatureItem1,
+        storefront_feature_item_2: storefrontFeatureItem2,
+        storefront_feature_item_3: storefrontFeatureItem3,
         tax_name: taxName,
         tax_rate: taxRate,
         service_fee_name: serviceFeeName,
@@ -255,6 +307,32 @@ function Settings() {
         store_name: data.store_name || "",
         store_address: data.store_address || "",
         store_contact: data.store_contact || "",
+        storefront_badge: String(
+          data.storefront_badge || "Etalase Resmi GEZY Commerce",
+        ),
+        storefront_hero_title: String(
+          data.storefront_hero_title ||
+            "Temukan produk pilihan dan nikmati pengalaman belanja yang cepat, praktis, dan nyaman.",
+        ),
+        storefront_hero_body: String(
+          data.storefront_hero_body ||
+            "Selamat datang di etalase resmi kami, tempat produk pilihan siap Anda pesan tanpa ribet.",
+        ),
+        storefront_feature_title: String(
+          data.storefront_feature_title || "Belanja Lebih Mudah",
+        ),
+        storefront_feature_item_1: String(
+          data.storefront_feature_item_1 ||
+            "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
+        ),
+        storefront_feature_item_2: String(
+          data.storefront_feature_item_2 ||
+            "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
+        ),
+        storefront_feature_item_3: String(
+          data.storefront_feature_item_3 ||
+            "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
+        ),
         tax_name: String(data.tax_name || ""),
         tax_rate: String(data.tax_rate ?? 0),
         service_fee_name: String(data.service_fee_name || ""),
@@ -565,6 +643,77 @@ function Settings() {
                 value={form.store_contact}
                 onChange={handleChange}
                 disabled={loading || !isAdmin}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-soft-xl dark:border-slate-800 dark:bg-slate-950">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Konten Storefront
+            </h2>
+            <div className="mt-4 space-y-3">
+              <input
+                type="text"
+                name="storefront_badge"
+                placeholder="Badge storefront"
+                value={form.storefront_badge}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <textarea
+                name="storefront_hero_title"
+                placeholder="Judul utama storefront"
+                value={form.storefront_hero_title}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                rows={3}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <textarea
+                name="storefront_hero_body"
+                placeholder="Deskripsi storefront"
+                value={form.storefront_hero_body}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                rows={4}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <input
+                type="text"
+                name="storefront_feature_title"
+                placeholder="Judul fitur"
+                value={form.storefront_feature_title}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <textarea
+                name="storefront_feature_item_1"
+                placeholder="Poin fitur 1"
+                value={form.storefront_feature_item_1}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                rows={2}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <textarea
+                name="storefront_feature_item_2"
+                placeholder="Poin fitur 2"
+                value={form.storefront_feature_item_2}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                rows={2}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <textarea
+                name="storefront_feature_item_3"
+                placeholder="Poin fitur 3"
+                value={form.storefront_feature_item_3}
+                onChange={handleChange}
+                disabled={loading || !isAdmin}
+                rows={2}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>

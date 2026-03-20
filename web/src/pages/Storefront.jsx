@@ -179,6 +179,24 @@ function Storefront() {
   }, [page, totalPages]);
 
   const storeName = settings?.store_name?.trim() || "GEZY Commerce";
+  const storefrontBadge =
+    settings?.storefront_badge?.trim() || `Etalase Resmi ${storeName}`;
+  const storefrontHeroTitle =
+    settings?.storefront_hero_title?.trim() ||
+    "Temukan produk pilihan dan nikmati pengalaman belanja yang cepat, praktis, dan nyaman.";
+  const storefrontHeroBody =
+    settings?.storefront_hero_body?.trim() ||
+    "Selamat datang di etalase resmi kami, tempat produk pilihan siap Anda pesan tanpa ribet.";
+  const storefrontFeatureTitle =
+    settings?.storefront_feature_title?.trim() || "Belanja Lebih Mudah";
+  const storefrontFeatureItems = [
+    settings?.storefront_feature_item_1?.trim() ||
+      "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
+    settings?.storefront_feature_item_2?.trim() ||
+      "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
+    settings?.storefront_feature_item_3?.trim() ||
+      "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
+  ];
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_22%),radial-gradient(circle_at_top_right,_#bae6fd,_transparent_28%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_42%,_#eff6ff_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_55%,_#111827_100%)] dark:text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
@@ -209,31 +227,25 @@ function Storefront() {
               <div className="absolute -left-10 top-0 h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl" />
               <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-amber-300/20 blur-3xl" />
               <p className="relative text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-200 sm:text-xs sm:tracking-[0.34em]">
-                Etalase Resmi {storeName}
+                {storefrontBadge}
               </p>
               <h1 className="relative mt-4 max-w-3xl text-xl font-semibold leading-tight sm:mt-5 sm:text-2xl lg:text-3xl">
-                Temukan produk pilihan dan nikmati pengalaman belanja yang
-                cepat, praktis, dan nyaman.
+                {storefrontHeroTitle}
               </h1>
               <p className="relative mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:mt-5 sm:leading-7 lg:text-base">
-                Selamat datang di etalase resmi kami, tempat produk pilihan siap
-                Anda pesan tanpa ribet. Tersedia di Jalan Al-Ikhlash, RT 008 RW
-                004 Sumberejo 43A Batanghari, Lampung Timur. Hubungi{" "}
+                {storefrontHeroBody} Tersedia di{" "}
+                {settings?.store_address || "-"}. Hubungi{" "}
                 <span className="font-semibold text-white">
-                  +62 85156266044
+                  {settings?.store_contact || "-"}
                 </span>
                 .
               </p>
               <div className="relative mt-6 rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.18)] sm:p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
-                  Belanja Lebih Mudah
+                  {storefrontFeatureTitle}
                 </p>
                 <div className="mt-4 grid gap-3">
-                  {[
-                    "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
-                    "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
-                    "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
-                  ].map((item, index) => (
+                  {storefrontFeatureItems.map((item, index) => (
                     <div
                       key={item}
                       className="flex items-start gap-3 rounded-[1.25rem] border border-white/10 bg-slate-950/40 px-4 py-3"
