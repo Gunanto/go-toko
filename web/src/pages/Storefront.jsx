@@ -110,11 +110,6 @@ function Storefront() {
   );
 
   const storeName = settings?.store_name?.trim() || "GEZY Commerce";
-  const storeAddress =
-    settings?.store_address?.trim() || "Toko belum mengatur alamat.";
-  const storeContact =
-    settings?.store_contact?.trim() || "Kontak toko belum tersedia.";
-
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fef3c7,_transparent_22%),radial-gradient(circle_at_top_right,_#bae6fd,_transparent_28%),linear-gradient(180deg,_#fffdf8_0%,_#f8fafc_42%,_#eff6ff_100%)] text-slate-900 dark:bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_55%,_#111827_100%)] dark:text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
@@ -147,18 +142,41 @@ function Storefront() {
               <p className="relative text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-200 sm:text-xs sm:tracking-[0.34em]">
                 Etalase Resmi {storeName}
               </p>
-              <h1 className="relative mt-4 max-w-3xl text-3xl font-semibold leading-tight sm:mt-5 sm:text-4xl lg:text-6xl">
+              <h1 className="relative mt-4 max-w-3xl text-xl font-semibold leading-tight sm:mt-5 sm:text-2xl lg:text-3xl">
                 Temukan produk pilihan dan nikmati pengalaman belanja yang
                 cepat, praktis, dan nyaman.
               </h1>
               <p className="relative mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:mt-5 sm:leading-7 lg:text-base">
                 Selamat datang di etalase resmi kami, tempat produk pilihan siap
-                kamu pesan dengan cepat dan praktis. Nikmati pengalaman belanja
-                yang mudah, pembayaran yang lancar, dan pemantauan pesanan tanpa
-                ribet. Tersedia di {storeAddress}. Hubungi{" "}
-                <span className="font-semibold text-white">{storeContact}</span>
+                Anda pesan tanpa ribet. Tersedia di Jalan Al-Ikhlash, RT 008 RW
+                004 Sumberejo 43A Batanghari, Lampung Timur. Hubungi{" "}
+                <span className="font-semibold text-white">
+                  +62 85156266044
+                </span>
                 .
               </p>
+              <div className="relative mt-6 rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.18)] sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
+                  Belanja Lebih Mudah
+                </p>
+                <div className="mt-4 grid gap-3">
+                  {[
+                    "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
+                    "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
+                    "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
+                  ].map((item, index) => (
+                    <div
+                      key={item}
+                      className="flex items-start gap-3 rounded-[1.25rem] border border-white/10 bg-slate-950/40 px-4 py-3"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-950">
+                        {index + 1}
+                      </div>
+                      <p className="text-sm leading-5 text-slate-200">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="relative mt-6 grid gap-3 sm:mt-7 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
@@ -262,33 +280,10 @@ function Storefront() {
           </div>
         ) : null}
 
-        <section className="mt-8 grid gap-4 lg:grid-cols-[0.76fr,1.24fr] lg:items-start">
-          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-5 shadow-soft-xl sm:p-6 lg:self-start">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">
-              Belanja Lebih Mudah
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              {[
-                "Temukan produk favoritmu lewat pencarian atau kategori pilihan.",
-                "Masukkan ke keranjang dalam beberapa klik dari etalase atau halaman detail.",
-                "Selesaikan pembayaran dengan cepat lalu pantau status pesananmu dengan mudah.",
-              ].map((item, index) => (
-                <div
-                  key={item}
-                  className="flex items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3"
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white">
-                    {index + 1}
-                  </div>
-                  <p className="text-sm leading-5 text-slate-600">{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        <section className="mt-8">
           <div className="rounded-[2rem] border border-slate-200/70 bg-[linear-gradient(135deg,_#fff7ed,_#ffffff_45%,_#eff6ff)] p-5 shadow-soft-xl sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-              <div>
+              <div className="max-w-2xl text-justify">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">
                   Koleksi Pilihan
                 </p>
