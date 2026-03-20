@@ -111,6 +111,7 @@ func NewRouter(
 					storeAuthProtected.GET("/me", storeAuthHandler.GetMe)
 				}
 			}
+			store.GET("/categories", categoryHandler.ListStoreCategories)
 			store.GET("/settings", settingHandler.GetSettings)
 			store.GET("/payments", paymentHandler.ListPayments)
 			store.GET("/products", productHandler.ListPublishedProducts)

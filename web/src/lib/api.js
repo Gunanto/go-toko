@@ -154,6 +154,14 @@ export async function listStoreProducts({
   return request(`/store/products?${params.toString()}`);
 }
 
+export async function listStoreCategories({ skip = 0, limit = 200 } = {}) {
+  const params = new URLSearchParams({
+    skip: String(skip),
+    limit: String(limit),
+  });
+  return request(`/store/categories?${params.toString()}`);
+}
+
 export async function getStoreProductBySlug(slug) {
   return request(`/store/products/${slug}`);
 }

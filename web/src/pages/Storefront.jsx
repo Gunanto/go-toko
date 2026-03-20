@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchStoreSettings, listStoreProducts } from "../lib/api";
+import {
+  fetchStoreSettings,
+  listStoreCategories,
+  listStoreProducts,
+} from "../lib/api";
 import { addToCart, getCartCount } from "../lib/storeCart";
 import logoCommerce from "../assets/logo-gezy-commerce-transparent.png";
 import StoreHeaderActions from "../components/StoreHeaderActions";
@@ -13,6 +17,7 @@ function Storefront() {
   const pageSize = 24;
   const [products, setProducts] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -49,6 +54,24 @@ function Storefront() {
       }
     };
     loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadCategories = async () => {
+      try {
+        const response = await listStoreCategories({ limit: 200 });
+        if (!isMounted) return;
+        setCategories(response?.data?.categories || []);
+      } catch {
+        if (!isMounted) return;
+        setCategories([]);
+      }
+    };
+    loadCategories();
     return () => {
       isMounted = false;
     };
@@ -92,18 +115,15 @@ function Storefront() {
     };
   }, [page, pageSize, search, selectedCategory]);
 
-  const categories = useMemo(() => {
-    const values = new Map();
-    products.forEach((product) => {
-      if (product.category?.id && product.category?.name) {
-        values.set(String(product.category.id), product.category.name);
-      }
-    });
+  const categoryOptions = useMemo(() => {
     return [
       { id: "all", name: "Lihat Semua" },
-      ...Array.from(values, ([id, name]) => ({ id, name })),
+      ...categories.map((category) => ({
+        id: String(category.id),
+        name: category.name,
+      })),
     ];
-  }, [products]);
+  }, [categories]);
 
   const heroProducts = useMemo(() => products.slice(0, 3), [products]);
   const spotlightProducts = useMemo(
@@ -223,7 +243,7 @@ function Storefront() {
                   className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none"
                 />
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {categories.map((category) => (
+                  {categoryOptions.map((category) => (
                     <button
                       key={category.id}
                       type="button"

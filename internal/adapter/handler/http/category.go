@@ -148,6 +148,48 @@ func (ch *CategoryHandler) ListCategories(ctx *gin.Context) {
 	handleSuccess(ctx, rsp)
 }
 
+// ListStoreCategories godoc
+//
+//	@Summary		List storefront categories
+//	@Description	List categories for storefront filtering
+//	@Tags			Storefront
+//	@Accept			json
+//	@Produce		json
+//	@Param			skip	query		uint64			true	"Skip"
+//	@Param			limit	query		uint64			true	"Limit"
+//	@Success		200		{object}	meta			"Categories displayed"
+//	@Failure		400		{object}	errorResponse	"Validation error"
+//	@Failure		500		{object}	errorResponse	"Internal server error"
+//	@Router			/store/categories [get]
+func (ch *CategoryHandler) ListStoreCategories(ctx *gin.Context) {
+	var req listCategoriesRequest
+	var categoriesList []categoryResponse
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		validationError(ctx, err)
+		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 200
+	}
+
+	categories, err := ch.svc.ListCategories(ctx, req.Skip, req.Limit)
+	if err != nil {
+		handleError(ctx, err)
+		return
+	}
+
+	for _, category := range categories {
+		categoriesList = append(categoriesList, newCategoryResponse(&category))
+	}
+
+	total := uint64(len(categoriesList))
+	meta := newMeta(total, req.Limit, req.Skip)
+	rsp := toMap(meta, categoriesList, "categories")
+
+	handleSuccess(ctx, rsp)
+}
+
 // updateCategoryRequest represents a request body for updating a category
 type updateCategoryRequest struct {
 	Name string `json:"name" binding:"omitempty,required" example:"Beverages"`
