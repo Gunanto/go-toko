@@ -79,6 +79,20 @@ Modul UI yang tersedia saat ini:
 - Reports: penjualan harian, cashflow mingguan, dan analisis produk bulanan
 - Settings: UI untuk preferensi aplikasi
 
+Recent additions:
+
+Penambahan terbaru:
+
+- Backend store chat MVP for customer-admin conversations using REST + polling
+- Frontend admin inbox and storefront chat pages
+- Role-aware access for admin-only chat inbox
+- Frontend lazy-loading for heavier routes to reduce initial bundle size
+
+- Backend chat store MVP untuk percakapan customer-admin berbasis REST + polling
+- Halaman frontend inbox admin dan chat storefront
+- Akses berbasis role untuk inbox chat khusus admin
+- Lazy-loading frontend untuk route yang lebih berat agar bundle awal lebih ringan
+
 ## Project Structure / Struktur Proyek
 
 ```text
@@ -372,6 +386,15 @@ Developers interested in contributing to Go POS can refer to [CONTRIBUTING.md](.
 
 Developer yang ingin berkontribusi ke Go POS dapat melihat [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+## Maintainer / Pengembang Lanjutan
+
+This repository includes original work by Bagas Hizbullah and continued development, maintenance, and feature additions by Gunanto.
+
+Repositori ini mencakup karya asli dari Bagas Hizbullah dan pengembangan lanjutan, pemeliharaan, serta penambahan fitur oleh Gunanto.
+
+- Maintainer / Pengembang lanjutan: Gunanto
+- Contact / Kontak: `gunanto75@gmail.com`
+
 ## License / Lisensi
 
 This project is licensed under the [MIT License](./LICENSE).
@@ -381,6 +404,31 @@ Proyek ini dilisensikan di bawah [MIT License](./LICENSE).
 MIT is a permissive license. You can modify the codebase and its documentation, including this README, as long as you continue complying with the license terms when redistributing the software.
 
 MIT adalah lisensi permisif. Anda dapat memodifikasi codebase dan dokumentasinya, termasuk README ini, selama tetap mematuhi ketentuan lisensi saat mendistribusikan ulang software.
+
+### MIT Usage Reminder / Pengingat Penggunaan MIT
+
+You may add new backend or frontend features, modify existing code, and redistribute the software under the MIT License, provided that:
+
+Anda boleh menambahkan fitur backend atau frontend baru, memodifikasi kode yang ada, dan mendistribusikan ulang software ini di bawah lisensi MIT, dengan syarat:
+
+- the original MIT license text remains included in redistributed copies or substantial portions of the software
+- copyright and license notices are preserved
+- attribution to prior authors is not removed when substantial portions of their work remain
+- usage must still comply with applicable laws and regulations in your jurisdiction
+- this project is provided "as is", without warranty, as stated in the MIT License
+
+- teks lisensi MIT tetap disertakan dalam salinan distribusi atau bagian substansial software
+- notice copyright dan lisensi tetap dipertahankan
+- atribusi kepada penulis sebelumnya tidak dihapus selama bagian substansial karyanya masih ada
+- penggunaan tetap harus mematuhi hukum dan peraturan yang berlaku di yurisdiksi Anda
+- proyek ini disediakan apa adanya tanpa jaminan sebagaimana tercantum dalam lisensi MIT
+
+For attribution and maintenance context, see [NOTICE](./NOTICE).
+
+Untuk konteks atribusi dan pemeliharaan, lihat [NOTICE](./NOTICE).
+- pemberitahuan hak cipta dan lisensi tetap dipertahankan
+- penggunaan tetap harus mematuhi hukum dan regulasi yang berlaku di yurisdiksi Anda
+- proyek ini disediakan "as is" tanpa jaminan, sesuai isi lisensi MIT
 
 ## Learning References / Referensi Pembelajaran
 

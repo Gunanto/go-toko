@@ -38,7 +38,10 @@ function StoreChat() {
 
   const scrollToBottom = () => {
     window.requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
     });
   };
 
@@ -77,9 +80,7 @@ function StoreChat() {
         if ((nextConversation?.customer_unread_count || 0) > 0) {
           markStoreChatRead({ token }).catch(() => {});
           setConversation((current) =>
-            current
-              ? { ...current, customer_unread_count: 0 }
-              : current,
+            current ? { ...current, customer_unread_count: 0 } : current,
           );
         }
 
@@ -170,8 +171,8 @@ function StoreChat() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e0f2fe,_transparent_20%),radial-gradient(circle_at_top_right,_#fde68a,_transparent_24%),linear-gradient(180deg,_#fffef9_0%,_#f8fafc_48%,_#eef2ff_100%)] pb-28 text-slate-900 lg:pb-10">
-      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#e0f2fe,_transparent_20%),radial-gradient(circle_at_top_right,_#fde68a,_transparent_24%),linear-gradient(180deg,_#fffef9_0%,_#f8fafc_48%,_#eef2ff_100%)] pb-28 text-slate-900 dark:bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.12),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.16),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_50%,_#111827_100%)] dark:text-slate-100 lg:pb-10">
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <img
@@ -180,10 +181,10 @@ function StoreChat() {
               className="h-10 w-auto object-contain sm:h-11"
             />
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700 dark:text-sky-300">
                 Store Chat
               </p>
-              <p className="truncate text-sm text-slate-500">
+              <p className="truncate text-sm text-slate-500 dark:text-slate-400">
                 Komunikasi cepat dengan admin toko
               </p>
             </div>
@@ -229,23 +230,27 @@ function StoreChat() {
               <p>Tips cepat:</p>
               <ul className="mt-3 space-y-2">
                 <li>Sebutkan nama produk atau kebutuhanmu langsung.</li>
-                <li>Gunakan satu pesan singkat per pertanyaan agar mudah dibalas.</li>
-                <li>Untuk cek order, kamu juga bisa buka halaman status pesanan.</li>
+                <li>
+                  Gunakan satu pesan singkat per pertanyaan agar mudah dibalas.
+                </li>
+                <li>
+                  Untuk cek order, kamu juga bisa buka halaman status pesanan.
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white shadow-soft-xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+          <div className="rounded-[2rem] border border-slate-200 bg-white shadow-soft-xl dark:border-slate-800 dark:bg-slate-950 dark:shadow-[0_18px_40px_rgba(2,6,23,0.45)]">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-800">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
                   Percakapan Aktif
                 </p>
-                <h2 className="mt-2 text-xl font-semibold text-slate-950">
+                <h2 className="mt-2 text-xl font-semibold text-slate-950 dark:text-slate-100">
                   Chat dengan admin toko
                 </h2>
               </div>
-              <div className="text-right text-xs text-slate-500">
+              <div className="text-right text-xs text-slate-500 dark:text-slate-400">
                 <p>Pesan: {messages.length}</p>
                 <p>
                   Update terakhir: {formatTime(conversation?.last_message_at)}
@@ -253,22 +258,22 @@ function StoreChat() {
               </div>
             </div>
 
-            <div className="space-y-4 bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_100%)] px-4 py-5 sm:px-6">
+            <div className="space-y-4 bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_100%)] px-4 py-5 dark:bg-[linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] sm:px-6">
               {loading ? (
-                <div className="rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                <div className="rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                   Memuat percakapan...
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-medium text-rose-700">
+                <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-4 text-sm font-medium text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-200">
                   {error}
                 </div>
               ) : null}
 
               <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1">
                 {messages.length === 0 && !loading ? (
-                  <div className="rounded-[1.4rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+                  <div className="rounded-[1.4rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                     Belum ada pesan. Mulai percakapanmu dengan admin toko.
                   </div>
                 ) : null}
@@ -286,7 +291,7 @@ function StoreChat() {
                         className={`max-w-[85%] rounded-[1.4rem] px-4 py-3 shadow-sm ${
                           isCustomer
                             ? "bg-slate-950 text-white"
-                            : "border border-slate-200 bg-sky-50 text-slate-900"
+                            : "border border-slate-200 bg-sky-50 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                         }`}
                       >
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">
@@ -305,30 +310,33 @@ function StoreChat() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-3 border-t border-slate-200 pt-4">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-800"
+              >
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   rows={4}
                   maxLength={2000}
                   placeholder="Tulis pesan ke admin toko..."
-                  className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-[1.4rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-500/20"
                 />
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
                     {draft.trim().length}/2000 karakter
                   </div>
                   <div className="flex gap-2">
                     <Link
                       to="/store/orders/status"
-                      className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                      className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       Cek order
                     </Link>
                     <button
                       type="submit"
                       disabled={sending || !draft.trim()}
-                      className="rounded-xl bg-sky-600 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                      className="rounded-xl bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-cyan-600 dark:disabled:bg-slate-700"
                     >
                       {sending ? "Mengirim..." : "Kirim"}
                     </button>
