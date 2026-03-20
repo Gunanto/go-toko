@@ -180,16 +180,49 @@ function Settings() {
       return;
     }
 
+    const storeName = form.store_name.trim();
+    const storeAddress = form.store_address.trim();
+    const storeContact = form.store_contact.trim();
+    const taxName = form.tax_name.trim();
+    const serviceFeeName = form.service_fee_name.trim();
+    const taxRate =
+      form.tax_rate.trim() === "" ? 0 : Number.parseFloat(form.tax_rate);
+    const serviceFeeRate =
+      form.service_fee_rate.trim() === ""
+        ? 0
+        : Number.parseFloat(form.service_fee_rate);
+
+    if (
+      !storeName ||
+      !storeAddress ||
+      !storeContact ||
+      !taxName ||
+      !serviceFeeName
+    ) {
+      flash("error", "Semua field pengaturan wajib diisi.");
+      return;
+    }
+
+    if (!Number.isFinite(taxRate) || taxRate < 0) {
+      flash("error", "Tarif pajak harus berupa angka 0 atau lebih.");
+      return;
+    }
+
+    if (!Number.isFinite(serviceFeeRate) || serviceFeeRate < 0) {
+      flash("error", "Tarif biaya layanan harus berupa angka 0 atau lebih.");
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
-        store_name: form.store_name.trim(),
-        store_address: form.store_address.trim(),
-        store_contact: form.store_contact.trim(),
-        tax_name: form.tax_name.trim(),
-        tax_rate: Number(form.tax_rate || 0),
-        service_fee_name: form.service_fee_name.trim(),
-        service_fee_rate: Number(form.service_fee_rate || 0),
+        store_name: storeName,
+        store_address: storeAddress,
+        store_contact: storeContact,
+        tax_name: taxName,
+        tax_rate: taxRate,
+        service_fee_name: serviceFeeName,
+        service_fee_rate: serviceFeeRate,
       };
       const response = await updateSettings(payload, { token });
       const data = response?.data || payload;
