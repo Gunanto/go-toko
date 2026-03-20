@@ -20,6 +20,8 @@ type ProductRepository interface {
 	ListProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
 	// ListPublishedProducts selects a published product list with pagination
 	ListPublishedProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
+	// CountPublishedProducts counts published products for storefront pagination
+	CountPublishedProducts(ctx context.Context, search string, categoryId uint64) (uint64, error)
 	// UpdateProduct updates a product
 	UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error)
 	// DeleteProduct deletes a product
@@ -38,6 +40,8 @@ type ProductService interface {
 	ListProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
 	// ListPublishedProducts returns a published product list with pagination
 	ListPublishedProducts(ctx context.Context, search string, categoryId, skip, limit uint64) ([]domain.Product, error)
+	// CountPublishedProducts counts published products for storefront pagination
+	CountPublishedProducts(ctx context.Context, search string, categoryId uint64) (uint64, error)
 	// UpdateProduct updates a product
 	UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error)
 	// DeleteProduct deletes a product

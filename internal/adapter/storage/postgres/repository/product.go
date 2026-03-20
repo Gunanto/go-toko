@@ -340,6 +340,38 @@ func (pr *ProductRepository) ListPublishedProducts(ctx context.Context, search s
 	return products, nil
 }
 
+// CountPublishedProducts counts published products for storefront pagination.
+func (pr *ProductRepository) CountPublishedProducts(ctx context.Context, search string, categoryId uint64) (uint64, error) {
+	query := pr.db.QueryBuilder.
+		Select("COUNT(*)").
+		From("products").
+		Where(sq.Eq{"status": "published"})
+
+	if search != "" {
+		query = query.Where(sq.Or{
+			sq.ILike{"name": "%" + search + "%"},
+			sq.ILike{"slug": "%" + search + "%"},
+			sq.ILike{"description": "%" + search + "%"},
+		})
+	}
+
+	if categoryId > 0 {
+		query = query.Where(sq.Eq{"category_id": categoryId})
+	}
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	var total uint64
+	if err := pr.db.QueryRow(ctx, sql, args...).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
 // UpdateProduct updates a product record in the database
 func (pr *ProductRepository) UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error) {
 	categoryId := nullUint64(product.CategoryID)

@@ -186,6 +186,16 @@ func (ps *ProductService) ListPublishedProducts(ctx context.Context, search stri
 	return products, nil
 }
 
+// CountPublishedProducts counts published products for storefront pagination.
+func (ps *ProductService) CountPublishedProducts(ctx context.Context, search string, categoryID uint64) (uint64, error) {
+	total, err := ps.productRepo.CountPublishedProducts(ctx, search, categoryID)
+	if err != nil {
+		return 0, domain.ErrInternal
+	}
+
+	return total, nil
+}
+
 // GetPublishedProductBySlug retrieves a published product by slug.
 func (ps *ProductService) GetPublishedProductBySlug(ctx context.Context, slug string) (*domain.Product, error) {
 	product, err := ps.productRepo.GetPublishedProductBySlug(ctx, slug)

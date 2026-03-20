@@ -20,6 +20,7 @@ function Storefront() {
   const [cartCount, setCartCount] = useState(0);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("id-ID", {
@@ -71,12 +72,15 @@ function Storefront() {
         });
         if (!isMounted) return;
         const list = response?.data?.products || [];
+        const total = response?.data?.meta?.total ?? list.length;
         setProducts(list);
-        setHasNext(list.length === pageSize);
+        setTotalProducts(total);
+        setHasNext((page + 1) * pageSize < total);
       } catch (err) {
         if (!isMounted) return;
         setError(err.message || "Gagal memuat katalog.");
         setProducts([]);
+        setTotalProducts(0);
         setHasNext(false);
       } finally {
         if (isMounted) setLoading(false);
@@ -365,7 +369,8 @@ function Storefront() {
               </h2>
             </div>
             <div className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-              Halaman {page + 1} • {products.length} produk tampil
+              Halaman {page + 1} dari{" "}
+              {Math.max(Math.ceil(totalProducts / pageSize), 1)}
             </div>
           </div>
 
@@ -454,7 +459,7 @@ function Storefront() {
           )}
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-500">
-              Menampilkan {products.length} produk pada halaman ini.
+              Menampilkan {products.length} dari {totalProducts} produk.
             </p>
             <div className="flex gap-3">
               <button

@@ -129,6 +129,21 @@ func (mr *MockProductRepositoryMockRecorder) ListPublishedProducts(ctx, search, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPublishedProducts", reflect.TypeOf((*MockProductRepository)(nil).ListPublishedProducts), ctx, search, categoryId, skip, limit)
 }
 
+// CountPublishedProducts mocks base method.
+func (m *MockProductRepository) CountPublishedProducts(ctx context.Context, search string, categoryId uint64) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountPublishedProducts", ctx, search, categoryId)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountPublishedProducts indicates an expected call of CountPublishedProducts.
+func (mr *MockProductRepositoryMockRecorder) CountPublishedProducts(ctx, search, categoryId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountPublishedProducts", reflect.TypeOf((*MockProductRepository)(nil).CountPublishedProducts), ctx, search, categoryId)
+}
+
 // UpdateProduct mocks base method.
 func (m *MockProductRepository) UpdateProduct(ctx context.Context, product *domain.Product) (*domain.Product, error) {
 	m.ctrl.T.Helper()
@@ -254,6 +269,21 @@ func (m *MockProductService) ListPublishedProducts(ctx context.Context, search s
 func (mr *MockProductServiceMockRecorder) ListPublishedProducts(ctx, search, categoryId, skip, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPublishedProducts", reflect.TypeOf((*MockProductService)(nil).ListPublishedProducts), ctx, search, categoryId, skip, limit)
+}
+
+// CountPublishedProducts mocks base method.
+func (m *MockProductService) CountPublishedProducts(ctx context.Context, search string, categoryId uint64) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountPublishedProducts", ctx, search, categoryId)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountPublishedProducts indicates an expected call of CountPublishedProducts.
+func (mr *MockProductServiceMockRecorder) CountPublishedProducts(ctx, search, categoryId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountPublishedProducts", reflect.TypeOf((*MockProductService)(nil).CountPublishedProducts), ctx, search, categoryId)
 }
 
 // UpdateProduct mocks base method.

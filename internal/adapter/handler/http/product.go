@@ -270,11 +270,16 @@ func (ph *ProductHandler) ListPublishedProducts(ctx *gin.Context) {
 		return
 	}
 
+	total, err := ph.svc.CountPublishedProducts(ctx, req.Query, req.CategoryID)
+	if err != nil {
+		handleError(ctx, err)
+		return
+	}
+
 	for _, product := range products {
 		productsList = append(productsList, newProductResponse(&product))
 	}
 
-	total := uint64(len(productsList))
 	meta := newMeta(total, req.Limit, req.Skip)
 	rsp := toMap(meta, productsList, "products")
 
